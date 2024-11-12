@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { CalendarDays } from "lucide-react";
 
 const PastSessions = () => {
   return (
@@ -8,18 +10,24 @@ const PastSessions = () => {
         <h2 className="text-xl font-semibold text-dara-navy px-2">Past Sessions</h2>
         <ScrollArea className="h-[calc(100vh-8rem)]">
           {[1, 2, 3, 4, 5].map((session) => (
-            <Button
-              key={session}
-              variant="ghost"
-              className="w-full justify-start text-left mb-2 h-auto py-3"
-            >
-              <div>
-                <div className="font-medium">Coaching Session {session}</div>
-                <div className="text-sm text-gray-500">
-                  {new Date().toLocaleDateString()}
+            <Card key={session} className="mb-3 hover:bg-gray-100 transition-colors cursor-pointer">
+              <CardHeader className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-dara-navy">
+                      Coaching Session {session}
+                    </h3>
+                    <div className="flex items-center text-sm text-gray-500 mt-1">
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      {new Date().toLocaleDateString()}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <span className="sr-only">View session {session}</span>
+                  </Button>
                 </div>
-              </div>
-            </Button>
+              </CardHeader>
+            </Card>
           ))}
         </ScrollArea>
       </div>
