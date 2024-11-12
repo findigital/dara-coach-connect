@@ -9,9 +9,9 @@ const Index = () => {
     <div className="min-h-screen bg-white flex">
       <Navigation />
       
-      <div className="flex-1 ml-64">
+      <div className="flex-1 lg:ml-64">
         <main className="flex-grow">
-          <div className="p-8">
+          <div className="p-8 pt-20 lg:pt-8">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <div className="flex items-center gap-2">

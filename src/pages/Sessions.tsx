@@ -10,9 +10,9 @@ const Sessions = () => {
     <div className="min-h-screen bg-white flex">
       <Navigation />
       
-      <div className="flex-1 ml-64">
-        <main className="h-screen">
-          <ResizablePanelGroup direction="horizontal">
+      <div className="flex-1 lg:ml-64">
+        <main className="h-screen pt-16 lg:pt-0">
+          <ResizablePanelGroup direction="horizontal" className="hidden lg:flex">
             <ResizablePanel defaultSize={20} minSize={15}>
               <ScrollArea className="h-full">
                 <PastSessions />
@@ -25,6 +25,19 @@ const Sessions = () => {
               <SessionNotes />
             </ResizablePanel>
           </ResizablePanelGroup>
+
+          {/* Mobile Layout */}
+          <div className="lg:hidden h-full">
+            <div className="h-1/3">
+              <PastSessions />
+            </div>
+            <div className="h-1/3">
+              <VoiceInteraction />
+            </div>
+            <div className="h-1/3">
+              <SessionNotes />
+            </div>
+          </div>
         </main>
       </div>
     </div>
