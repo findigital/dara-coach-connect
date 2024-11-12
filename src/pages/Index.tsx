@@ -54,7 +54,9 @@ const Index = () => {
               </div>
             </Card>
           </Link>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <Link to="/notifications">
             <Card className="p-6 card-hover h-[200px] cursor-pointer">
               <div className="flex flex-col h-full">
