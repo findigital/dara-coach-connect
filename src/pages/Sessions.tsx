@@ -27,14 +27,16 @@ const Sessions = () => {
           </ResizablePanelGroup>
 
           {/* Mobile Layout */}
-          <div className="lg:hidden h-full">
-            <div className="h-1/3">
-              <PastSessions />
+          <div className="lg:hidden flex flex-col h-[calc(100vh-4rem)]">
+            <div className="h-1/3 min-h-[300px] border-b">
+              <ScrollArea className="h-full">
+                <PastSessions />
+              </ScrollArea>
             </div>
-            <div className="h-1/3">
+            <div className="h-1/3 min-h-[300px] border-b">
               <VoiceInteraction />
             </div>
-            <div className="h-1/3">
+            <div className="h-1/3 min-h-[300px]">
               <SessionNotes />
             </div>
           </div>
