@@ -26,9 +26,9 @@ const Index = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link to="/sessions">
-            <Card className="p-6 card-hover h-[200px] bg-dara-navy text-white cursor-pointer">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link to="/sessions" className="md:col-span-1">
+            <Card className="p-6 card-hover h-[250px] bg-dara-navy text-white cursor-pointer">
               <div className="flex flex-col h-full">
                 <div className="bg-dara-yellow rounded-full p-3 w-fit">
                   <MessageSquare className="h-6 w-6 text-dara-navy" />
@@ -41,8 +41,8 @@ const Index = () => {
             </Card>
           </Link>
 
-          <Link to="/todos">
-            <Card className="p-6 card-hover h-[200px] cursor-pointer">
+          <Link to="/todos" className="md:col-span-1">
+            <Card className="p-6 card-hover h-[250px] cursor-pointer">
               <div className="flex flex-col h-full">
                 <div className="bg-dara-yellow rounded-full p-3 w-fit">
                   <ClipboardList className="h-6 w-6 text-dara-navy" />
