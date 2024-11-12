@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import { Calendar, MessageSquare, Bell, ClipboardList, Compass } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -105,7 +104,6 @@ const Index = () => {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     </div>
   );
