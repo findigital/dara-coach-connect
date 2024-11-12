@@ -12,7 +12,7 @@ const Sessions = () => {
       <Navigation />
       
       <main className="flex-grow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[calc(100vh-4rem-16rem)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[calc(100vh-4rem-6rem)]">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={20} minSize={15}>
               <ScrollArea className="h-full">
