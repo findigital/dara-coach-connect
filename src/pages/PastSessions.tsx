@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Navigation from "@/components/Navigation";
-import { CalendarDays, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { CalendarDays, CheckCircle2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/components/ui/use-toast";
 
 const pastSessions = [
   {
@@ -13,9 +13,9 @@ const pastSessions = [
     title: "Goal Setting Session",
     summary: "Discussed career transition goals and identified key milestones. Focus on developing new skills in project management.",
     actionItems: [
-      "Research PMP certification requirements",
-      "Create a timeline for skill development",
-      "Schedule informational interviews"
+      { id: 1, text: "Research PMP certification requirements", completed: false },
+      { id: 2, text: "Create a timeline for skill development", completed: false },
+      { id: 3, text: "Schedule informational interviews", completed: false }
     ]
   },
   {
@@ -24,40 +24,58 @@ const pastSessions = [
     title: "Stress Management",
     summary: "Explored current stress triggers and developed coping mechanisms. Emphasis on work-life balance and boundary setting.",
     actionItems: [
-      "Implement daily meditation practice",
-      "Set up work schedule boundaries",
-      "Create weekly exercise routine"
+      { id: 4, text: "Implement daily meditation practice", completed: false },
+      { id: 5, text: "Set up work schedule boundaries", completed: false },
+      { id: 6, text: "Create weekly exercise routine", completed: false }
     ]
   }
 ];
 
 const PastSessions = () => {
   const [activeSessionId, setActiveSessionId] = useState(pastSessions[0].id);
+  const [sessions, setSessions] = useState(pastSessions);
+  const { toast } = useToast();
 
-  const activeSession = pastSessions.find(session => session.id === activeSessionId);
+  const activeSession = sessions.find(session => session.id === activeSessionId);
+
+  const handleCheckboxChange = (sessionId: number, actionItemId: number) => {
+    setSessions(prevSessions => 
+      prevSessions.map(session => {
+        if (session.id === sessionId) {
+          return {
+            ...session,
+            actionItems: session.actionItems.map(item => 
+              item.id === actionItemId 
+                ? { ...item, completed: !item.completed }
+                : item
+            )
+          };
+        }
+        return session;
+      })
+    );
+
+    toast({
+      title: "Progress saved",
+      description: "Your action item status has been updated.",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Navigation />
-      
       <div className="flex-1 lg:ml-64">
         <main className="h-screen pt-16 lg:pt-0">
           <div className="container mx-auto p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <BookOpen className="h-5 w-5 text-dara-navy" />
-              <h1 className="text-2xl font-bold text-dara-navy">Past Coaching Sessions</h1>
-            </div>
-            
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Sessions List */}
-              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white">
                 <CardHeader className="space-y-1">
                   <CardTitle className="text-xl text-dara-navy">Sessions History</CardTitle>
                   <CardDescription>Review your previous coaching sessions</CardDescription>
                 </CardHeader>
                 <ScrollArea className="flex-1 px-4">
                   <div className="space-y-4 pb-4">
-                    {pastSessions.map((session) => (
+                    {sessions.map((session) => (
                       <Card 
                         key={session.id} 
                         className={cn(
@@ -71,12 +89,7 @@ const PastSessions = () => {
                         <CardHeader className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                              <CardTitle className={cn(
-                                "text-lg transition-colors",
-                                activeSessionId === session.id 
-                                  ? "text-dara-navy" 
-                                  : "text-dara-navy"
-                              )}>
+                              <CardTitle className="text-lg text-dara-navy">
                                 {session.title}
                               </CardTitle>
                               <div className="flex items-center text-sm text-gray-500">
@@ -99,44 +112,56 @@ const PastSessions = () => {
               </Card>
 
               {/* Session Details */}
-              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl text-dara-navy">Session Summary</CardTitle>
-                    <Badge variant="outline" className="bg-dara-yellow/10 text-dara-navy border-dara-yellow">
-                      Completed
-                    </Badge>
-                  </div>
-                  <CardDescription>Details and action items from your selected session</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ScrollArea className="h-full pr-4">
-                    <div className="space-y-6 animate-fade-in">
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-dara-navy">Summary</h3>
-                        <p className="text-gray-600 leading-relaxed">
-                          {activeSession?.summary}
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-dara-navy">Action Items</h3>
-                        <ul className="space-y-3">
-                          {activeSession?.actionItems.map((item, index) => (
-                            <li 
-                              key={index} 
-                              className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
-                            >
-                              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+              {activeSession && (
+                <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white">
+                  <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl text-dara-navy">{activeSession.title}</CardTitle>
+                      <div className="text-sm text-gray-500">
+                        {new Date(activeSession.date).toLocaleDateString()}
                       </div>
                     </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <ScrollArea className="h-full pr-4">
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="font-semibold text-dara-navy mb-2">Summary</h3>
+                          <p className="text-gray-600">{activeSession.summary}</p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-dara-navy">Action Items</h3>
+                          <div className="space-y-2">
+                            {activeSession.actionItems.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                              >
+                                <Checkbox
+                                  id={`item-${item.id}`}
+                                  checked={item.completed}
+                                  onCheckedChange={() => handleCheckboxChange(activeSession.id, item.id)}
+                                  className="mt-1"
+                                />
+                                <label
+                                  htmlFor={`item-${item.id}`}
+                                  className={cn(
+                                    "text-gray-700 cursor-pointer",
+                                    item.completed && "line-through text-gray-400"
+                                  )}
+                                >
+                                  {item.text}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </main>
