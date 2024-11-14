@@ -74,8 +74,8 @@ const PastSessions = () => {
                               <CardTitle className={cn(
                                 "text-lg transition-colors",
                                 activeSessionId === session.id 
-                                  ? "text-dara-yellow" 
-                                  : "text-dara-navy group-hover:text-dara-yellow"
+                                  ? "text-dara-navy" 
+                                  : "text-dara-navy"
                               )}>
                                 {session.title}
                               </CardTitle>
