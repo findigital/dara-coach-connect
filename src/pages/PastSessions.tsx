@@ -61,7 +61,7 @@ const PastSessions = () => {
                       <Card 
                         key={session.id} 
                         className={cn(
-                          "cursor-pointer transition-all duration-200 transform hover:translate-x-1 group",
+                          "cursor-pointer transition-all duration-200 transform hover:-translate-y-1 group",
                           activeSessionId === session.id 
                             ? "bg-dara-yellow/10 border-dara-yellow" 
                             : "hover:bg-gray-50"
