@@ -8,11 +8,11 @@ const VoiceInteraction = () => {
 
   return (
     <div className="h-full bg-gray-50 p-6">
-      <Card className="h-full bg-white">
+      <Card className="h-full bg-white flex flex-col">
         <CardHeader>
           <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center h-full space-y-8">
+        <CardContent className="flex-1 flex flex-col items-center justify-center space-y-8">
           <div className="relative w-64 h-64 flex items-center justify-center">
             {/* Circular Waveform Animation */}
             <div className="absolute inset-0">
