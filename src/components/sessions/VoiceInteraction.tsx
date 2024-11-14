@@ -1,6 +1,6 @@
 import { Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useState } from "react";
 
 const VoiceInteraction = () => {
@@ -9,6 +9,9 @@ const VoiceInteraction = () => {
   return (
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white">
+        <CardHeader>
+          <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+        </CardHeader>
         <CardContent className="flex flex-col items-center justify-center h-full space-y-8">
           <div className="relative w-64 h-64 flex items-center justify-center">
             {/* Circular Waveform Animation */}
