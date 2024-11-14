@@ -20,7 +20,7 @@ const VoiceInteraction = () => {
               size="lg"
               className="mt-4 border-2 border-dara-yellow text-dara-navy hover:bg-dara-yellow/10"
             >
-              Start Recording
+              Start Call
             </Button>
           </div>
         </CardContent>
