@@ -1,9 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Navigation from "@/components/Navigation";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-// Mock data - replace with actual data fetching
 const pastSessions = [
   {
     id: 1,
@@ -31,19 +32,22 @@ const pastSessions = [
 
 const PastSessions = () => {
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-gray-50 flex">
       <Navigation />
       
       <div className="flex-1 lg:ml-64">
         <main className="h-screen pt-16 lg:pt-0">
           <div className="container mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Past Coaching Sessions</h1>
+            <div className="flex items-center gap-2 mb-6">
+              <BookOpen className="h-5 w-5 text-dara-navy" />
+              <h1 className="text-2xl font-bold text-dara-navy">Past Coaching Sessions</h1>
+            </div>
             
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Sessions List */}
-              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col">
-                <CardHeader>
-                  <CardTitle>Sessions History</CardTitle>
+              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-xl text-dara-navy">Sessions History</CardTitle>
                   <CardDescription>Review your previous coaching sessions</CardDescription>
                 </CardHeader>
                 <ScrollArea className="flex-1 px-4">
@@ -51,15 +55,20 @@ const PastSessions = () => {
                     {pastSessions.map((session) => (
                       <Card 
                         key={session.id} 
-                        className="cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="cursor-pointer hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1 group"
                       >
-                        <CardHeader>
+                        <CardHeader className="p-4">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">{session.title}</CardTitle>
-                            <div className="flex items-center text-sm text-gray-500">
-                              <CalendarDays className="h-4 w-4 mr-1" />
-                              {new Date(session.date).toLocaleDateString()}
+                            <div className="space-y-1">
+                              <CardTitle className="text-lg text-dara-navy group-hover:text-dara-yellow transition-colors">
+                                {session.title}
+                              </CardTitle>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <CalendarDays className="h-4 w-4 mr-1" />
+                                {new Date(session.date).toLocaleDateString()}
+                              </div>
                             </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-dara-yellow transition-colors" />
                           </div>
                         </CardHeader>
                       </Card>
@@ -69,26 +78,36 @@ const PastSessions = () => {
               </Card>
 
               {/* Session Details */}
-              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col">
-                <CardHeader>
-                  <CardTitle>Session Summary</CardTitle>
+              <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl text-dara-navy">Session Summary</CardTitle>
+                    <Badge variant="outline" className="bg-dara-yellow/10 text-dara-navy border-dara-yellow">
+                      Completed
+                    </Badge>
+                  </div>
                   <CardDescription>Details and action items from your selected session</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <ScrollArea className="h-full">
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="font-semibold mb-2">Summary</h3>
-                        <p className="text-gray-600">{pastSessions[0].summary}</p>
+                  <ScrollArea className="h-full pr-4">
+                    <div className="space-y-6 animate-fade-in">
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-dara-navy">Summary</h3>
+                        <p className="text-gray-600 leading-relaxed">
+                          {pastSessions[0].summary}
+                        </p>
                       </div>
                       
-                      <div>
-                        <h3 className="font-semibold mb-2">Action Items</h3>
-                        <ul className="space-y-2">
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-dara-navy">Action Items</h3>
+                        <ul className="space-y-3">
                           {pastSessions[0].actionItems.map((item, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                              <span>{item}</span>
+                            <li 
+                              key={index} 
+                              className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                            >
+                              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-700">{item}</span>
                             </li>
                           ))}
                         </ul>
