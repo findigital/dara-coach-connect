@@ -10,11 +10,11 @@ const Sessions = () => {
       
       <div className="flex-1 lg:ml-64">
         <main className="h-screen pt-16 lg:pt-0">
-          <ResizablePanelGroup direction="horizontal" className="hidden lg:flex">
-            <ResizablePanel defaultSize={50}>
+          <ResizablePanelGroup direction="horizontal" className="hidden lg:flex h-screen">
+            <ResizablePanel defaultSize={50} minSize={30}>
               <VoiceInteraction />
             </ResizablePanel>
-            <ResizablePanel defaultSize={50}>
+            <ResizablePanel defaultSize={50} minSize={30}>
               <SessionNotes />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -24,7 +24,7 @@ const Sessions = () => {
             <div className="h-1/2 min-h-[300px] border-b">
               <VoiceInteraction />
             </div>
-            <div className="h-1/2 min-h-[300px]">
+            <div className="h-1/2 min-h-[300px] overflow-y-auto">
               <SessionNotes />
             </div>
           </div>

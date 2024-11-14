@@ -1,41 +1,65 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Clock, Save } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const SessionNotes = () => {
+  const { toast } = useToast();
+
+  const handleSaveNotes = () => {
+    toast({
+      title: "Notes saved",
+      description: "Your session notes have been saved successfully.",
+    });
+  };
+
   return (
     <div className="h-full bg-gray-50 p-6">
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-dara-navy mb-4">Session Notes</h2>
+          <h2 className="text-2xl font-semibold text-dara-navy mb-4">Counseling</h2>
           <div className="space-y-4">
             <Textarea
               placeholder="Write your notes here..."
-              className="min-h-[150px] bg-white"
+              className="min-h-[150px] bg-white resize-none focus-visible:ring-dara-yellow"
             />
-            <Button className="w-full bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90">
+            <Button 
+              onClick={handleSaveNotes}
+              className="w-full bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90 gap-2"
+            >
+              <Save className="h-4 w-4" />
               Save Notes
             </Button>
           </div>
         </div>
         
-        <ScrollArea className="h-[calc(100vh-24rem)]">
-          <div className="space-y-4">
-            {[
-              "That was a great point about active listening",
-              "The importance of body language",
-              "Key takeaway: Practice daily mindfulness",
-            ].map((note, index) => (
-              <Card key={index} className="p-4 bg-white">
-                <p className="text-gray-800">{note}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {new Date().toLocaleString()}
-                </p>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+        <Separator className="my-6" />
+        
+        <div>
+          <h3 className="text-lg font-medium text-dara-navy mb-4">Session History</h3>
+          <ScrollArea className="h-[calc(100vh-26rem)]">
+            <div className="space-y-4 pr-4">
+              {[
+                "That was a great point about active listening",
+                "The importance of body language",
+                "Key takeaway: Practice daily mindfulness",
+              ].map((note, index) => (
+                <Card key={index} className="bg-white hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <p className="text-gray-800">{note}</p>
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                      <Clock className="h-4 w-4" />
+                      <span>{new Date().toLocaleString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );
