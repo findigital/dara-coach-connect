@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Sessions from "./pages/Sessions";
 import PastSessions from "./pages/PastSessions";
+import Schedule from "./pages/Schedule";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/dashboard" element={<Index />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/past-sessions" element={<PastSessions />} />
+          <Route path="/schedule" element={<Schedule />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
