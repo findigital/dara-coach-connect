@@ -72,16 +72,16 @@ const Schedule = () => {
                   <p className="text-sm text-gray-500">Choose your preferred date and time</p>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="space-y-6">
+                  <div className="space-y-6 flex flex-col items-center">
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={setDate}
-                      className="rounded-md border"
+                      className="rounded-md border mx-auto"
                       disabled={(date) => date < new Date()}
                     />
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       <label className="text-sm font-medium text-gray-700">Select Time</label>
                       <Select value={time} onValueChange={setTime}>
                         <SelectTrigger>
