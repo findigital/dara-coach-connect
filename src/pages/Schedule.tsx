@@ -73,15 +73,17 @@ const Schedule = () => {
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="space-y-6 flex flex-col items-center">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      className="rounded-md border mx-auto"
-                      disabled={(date) => date < new Date()}
-                    />
+                    <div className="w-full max-w-[320px]">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        className="rounded-md border"
+                        disabled={(date) => date < new Date()}
+                      />
+                    </div>
                     
-                    <div className="space-y-2 w-full">
+                    <div className="space-y-2 w-full max-w-[320px]">
                       <label className="text-sm font-medium text-gray-700">Select Time</label>
                       <Select value={time} onValueChange={setTime}>
                         <SelectTrigger>
@@ -99,7 +101,7 @@ const Schedule = () => {
 
                     <Button 
                       onClick={handleSchedule}
-                      className="w-full bg-dara-yellow text-dara-navy hover:bg-dara-navy hover:text-white"
+                      className="w-full max-w-[320px] bg-dara-yellow text-dara-navy hover:bg-dara-navy hover:text-white"
                     >
                       Schedule Session
                     </Button>
