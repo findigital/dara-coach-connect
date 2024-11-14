@@ -10,7 +10,7 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white">
         <CardContent className="flex flex-col items-center justify-center h-full space-y-8">
-          <div className="relative w-48 h-48 flex items-center justify-center">
+          <div className="relative w-64 h-64 flex items-center justify-center">
             {/* Circular Waveform Animation */}
             <div className="absolute inset-0">
               <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -23,12 +23,10 @@ const VoiceInteraction = () => {
                     fill="none"
                     stroke="#FFE135"
                     strokeWidth="2"
-                    className={`transform origin-center ${
-                      isActive ? "animate-ripple" : "animate-pulse"
-                    }`}
+                    className="transform origin-center animate-ripple"
                     style={{
                       animationDelay: `${i * 0.5}s`,
-                      opacity: isActive ? 0.3 : 0.5,
+                      opacity: isActive ? 0.5 : 0.3,
                     }}
                   />
                 ))}
@@ -36,13 +34,11 @@ const VoiceInteraction = () => {
                 {[...Array(12)].map((_, i) => (
                   <circle
                     key={`dot-${i}`}
-                    cx={100 + Math.cos((i * Math.PI * 2) / 12) * 60}
-                    cy={100 + Math.sin((i * Math.PI * 2) / 12) * 60}
-                    r="2"
+                    cx={100 + Math.cos((i * Math.PI * 2) / 12) * 70}
+                    cy={100 + Math.sin((i * Math.PI * 2) / 12) * 70}
+                    r="3"
                     fill="#1E3D59"
-                    className={`transform origin-center ${
-                      isActive ? "animate-bounce" : ""
-                    }`}
+                    className="transform origin-center animate-pulse"
                     style={{ animationDelay: `${i * 0.1}s` }}
                   />
                 ))}
@@ -50,13 +46,13 @@ const VoiceInteraction = () => {
             </div>
             
             {/* Center Mic Icon */}
-            <div className="relative z-10 bg-white rounded-full p-4 shadow-lg">
-              <Mic className="h-12 w-12 text-dara-navy" />
+            <div className="relative z-10 bg-white rounded-full p-6 shadow-lg">
+              <Mic className="h-16 w-16 text-dara-navy" />
             </div>
           </div>
 
           <div className="text-center space-y-4">
-            <div className="text-sm text-dara-navy font-medium">
+            <div className="text-lg text-dara-navy font-medium">
               {isActive ? "Listening..." : "Ready to start"}
             </div>
             <Button 
