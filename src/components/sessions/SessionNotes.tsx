@@ -20,7 +20,7 @@ const SessionNotes = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white">
         <CardHeader>
-          <h2 className="text-2xl font-semibold text-dara-navy">Counseling</h2>
+          <h2 className="text-2xl font-semibold text-dara-navy">Take Notes</h2>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
