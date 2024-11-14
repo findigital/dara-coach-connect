@@ -78,7 +78,7 @@
 }
 
 .nav-link {
-  @apply text-dara-navy hover:text-dara-yellow transition-colors duration-200;
+  @apply text-gray-600 hover:text-dara-navy hover:bg-gray-100 transition-colors duration-200;
 }
 
 .card-hover {
