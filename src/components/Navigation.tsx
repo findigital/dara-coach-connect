@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const Navigation = () => {
+  const location = useLocation();
+  
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { path: "/sessions", label: "Start Session", icon: <MessageSquare className="h-5 w-5" /> },
@@ -22,16 +25,22 @@ const Navigation = () => {
 
       <div className="flex-1 px-4">
         <div className="space-y-2">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100"
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "nav-link flex items-center space-x-3 px-4 py-3 rounded-lg",
+                  isActive && "bg-dara-yellow/10 text-dara-navy border-r-4 border-dara-yellow"
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
