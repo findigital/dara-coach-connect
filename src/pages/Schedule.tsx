@@ -73,14 +73,16 @@ const Schedule = () => {
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="space-y-6 flex flex-col items-center">
-                    <div className="w-full max-w-[320px]">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="rounded-md border"
-                        disabled={(date) => date < new Date()}
-                      />
+                    <div className="flex justify-center w-full">
+                      <div className="w-full max-w-[320px]">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          className="rounded-md border mx-auto"
+                          disabled={(date) => date < new Date()}
+                        />
+                      </div>
                     </div>
                     
                     <div className="space-y-2 w-full max-w-[320px]">
