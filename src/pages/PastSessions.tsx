@@ -4,6 +4,7 @@ import Navigation from "@/components/Navigation";
 import { CalendarDays, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const pastSessions = [
   {
@@ -31,6 +32,10 @@ const pastSessions = [
 ];
 
 const PastSessions = () => {
+  const [activeSessionId, setActiveSessionId] = useState(pastSessions[0].id);
+
+  const activeSession = pastSessions.find(session => session.id === activeSessionId);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navigation />
@@ -55,12 +60,23 @@ const PastSessions = () => {
                     {pastSessions.map((session) => (
                       <Card 
                         key={session.id} 
-                        className="cursor-pointer hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1 group"
+                        className={cn(
+                          "cursor-pointer transition-all duration-200 transform hover:translate-x-1 group",
+                          activeSessionId === session.id 
+                            ? "bg-dara-yellow/10 border-dara-yellow" 
+                            : "hover:bg-gray-50"
+                        )}
+                        onClick={() => setActiveSessionId(session.id)}
                       >
                         <CardHeader className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                              <CardTitle className="text-lg text-dara-navy group-hover:text-dara-yellow transition-colors">
+                              <CardTitle className={cn(
+                                "text-lg transition-colors",
+                                activeSessionId === session.id 
+                                  ? "text-dara-yellow" 
+                                  : "text-dara-navy group-hover:text-dara-yellow"
+                              )}>
                                 {session.title}
                               </CardTitle>
                               <div className="flex items-center text-sm text-gray-500">
@@ -68,7 +84,12 @@ const PastSessions = () => {
                                 {new Date(session.date).toLocaleDateString()}
                               </div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-dara-yellow transition-colors" />
+                            <ChevronRight className={cn(
+                              "h-5 w-5 transition-colors",
+                              activeSessionId === session.id 
+                                ? "text-dara-yellow" 
+                                : "text-gray-400 group-hover:text-dara-yellow"
+                            )} />
                           </div>
                         </CardHeader>
                       </Card>
@@ -94,14 +115,14 @@ const PastSessions = () => {
                       <div className="space-y-2">
                         <h3 className="font-semibold text-dara-navy">Summary</h3>
                         <p className="text-gray-600 leading-relaxed">
-                          {pastSessions[0].summary}
+                          {activeSession?.summary}
                         </p>
                       </div>
                       
                       <div className="space-y-3">
                         <h3 className="font-semibold text-dara-navy">Action Items</h3>
                         <ul className="space-y-3">
-                          {pastSessions[0].actionItems.map((item, index) => (
+                          {activeSession?.actionItems.map((item, index) => (
                             <li 
                               key={index} 
                               className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
