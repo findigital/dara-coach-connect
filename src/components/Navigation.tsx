@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass } from "lucide-react";
+import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -7,6 +7,7 @@ const Navigation = () => {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { path: "/sessions", label: "Session", icon: <MessageSquare className="h-5 w-5" /> },
+    { path: "/past-sessions", label: "Past Sessions", icon: <History className="h-5 w-5" /> },
     { path: "/schedule", label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
     { path: "/wellness", label: "Wellness", icon: <Compass className="h-5 w-5" /> },
   ];
