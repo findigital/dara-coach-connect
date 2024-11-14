@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const Navigation = () => {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { path: "/sessions", label: "Session Notes", icon: <MessageSquare className="h-5 w-5" /> },
+    { path: "/sessions", label: "Session", icon: <MessageSquare className="h-5 w-5" /> },
     { path: "/schedule", label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
     { path: "/wellness", label: "Wellness", icon: <Compass className="h-5 w-5" /> },
   ];
