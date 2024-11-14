@@ -8,7 +8,7 @@ const SessionNotes = () => {
     <div className="h-full bg-gray-50 p-6">
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold text-dara-navy mb-4">Session Notes</h2>
+          <h2 className="text-2xl font-semibold text-dara-navy mb-4">Counseling</h2>
           <div className="space-y-4">
             <Textarea
               placeholder="Write your notes here..."
