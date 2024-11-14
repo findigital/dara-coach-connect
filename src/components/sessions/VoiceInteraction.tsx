@@ -1,4 +1,4 @@
-import { Mic, Waveform } from "lucide-react";
+import { Mic, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ const VoiceInteraction = () => {
           <p className="text-gray-500 text-sm mt-2">Your AI coach is ready to listen</p>
           
           <div className="flex items-center gap-2 mt-6 text-sm text-gray-500">
-            <Waveform className="h-4 w-4" />
+            <Activity className="h-4 w-4" />
             <span>Voice recognition active</span>
           </div>
         </CardContent>
