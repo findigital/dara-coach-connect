@@ -1,101 +1,109 @@
+import { Mic, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import VoiceVisualizer from "./VoiceVisualizer";
-import CallTimer from "./CallTimer";
-import AudioControls from "./AudioControls";
-import {
-  LiveKitRoom,
-  AudioConference,
-  RoomAudioRenderer,
-  ControlBar,
-  useRoom,
-  useParticipants,
-} from '@livekit/components-react';
-import '@livekit/components-styles';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 const VoiceInteraction = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [callStatus, setCallStatus] = useState<'available' | 'on-call' | 'ended'>('available');
-  const [token, setToken] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const startCall = async () => {
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
+
     try {
-      // In a real app, you would fetch a token from your server
-      const demoToken = process.env.VITE_LIVEKIT_TOKEN;
-      if (!demoToken) {
-        toast.error("LiveKit token not configured");
-        return;
-      }
-      
-      setToken(demoToken);
-      setCallStatus('on-call');
-      setIsRecording(true);
+      setIsLoading(true);
+      // Add user message
+      const userMessage: Message = { role: 'user', content };
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+
+      // Get AI response
+      const { data, error } = await supabase.functions.invoke('chat-with-dara', {
+        body: { message: content },
+      });
+
+      if (error) throw error;
+
+      // Add AI response
+      const aiMessage: Message = { role: 'assistant', content: data.reply };
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error starting call:', error);
-      toast.error("Failed to start call. Please try again.");
+      console.error('Error sending message:', error);
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const endCall = () => {
-    setIsRecording(false);
-    setCallStatus('ended');
-    setToken(null);
-  };
-
-  const resetCall = () => {
-    setCallStatus('available');
   };
 
   return (
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
-        <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
-          {token && (
-            <LiveKitRoom
-              serverUrl={process.env.VITE_LIVEKIT_URL}
-              token={token}
-              connect={true}
-              video={false}
-              audio={true}
+        <CardHeader>
+          <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col space-y-4">
+          {/* Messages Area */}
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.role === 'user'
+                        ? 'bg-dara-yellow text-dara-navy ml-4'
+                        : 'bg-gray-100 text-gray-800 mr-4'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+
+          {/* Input Area */}
+          <div className="flex items-center gap-2 pt-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className={`${isActive ? 'bg-red-100 hover:bg-red-200' : ''}`}
+              onClick={() => setIsActive(!isActive)}
             >
-              <div className="w-full">
-                <AudioConference />
-                <RoomAudioRenderer />
-                <ControlBar />
-              </div>
-            </LiveKitRoom>
-          )}
-          
-          <VoiceVisualizer isActive={isRecording} />
-          
-          <div className="text-center mb-4">
-            {callStatus === 'available' && (
-              <>
-                <p className="text-lg mb-2">Dara</p>
-                <p className="text-sm text-green-500 flex items-center justify-center gap-1">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Available
-                </p>
-              </>
-            )}
+              <Mic className={`h-5 w-5 ${isActive ? 'text-red-500' : ''}`} />
+            </Button>
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !isLoading) {
+                  sendMessage(input);
+                }
+              }}
+            />
+            <Button
+              onClick={() => sendMessage(input)}
+              disabled={isLoading || !input.trim()}
+              className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
           </div>
-
-          <CallTimer 
-            isActive={callStatus === 'on-call'} 
-            onReset={resetCall}
-          />
-
-          {callStatus === 'ended' && (
-            <p className="text-gray-600 mb-4">Call Ended</p>
-          )}
-
-          <AudioControls
-            isRecording={isRecording}
-            onStartCall={startCall}
-            onEndCall={endCall}
-            callStatus={callStatus}
-          />
         </CardContent>
       </Card>
     </div>
