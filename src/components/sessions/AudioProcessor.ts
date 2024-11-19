@@ -1,5 +1,3 @@
-import { toast } from "sonner";
-
 export class AudioProcessor {
   private mediaRecorder: MediaRecorder | null = null;
   private audioContext: AudioContext | null = null;
@@ -7,9 +5,6 @@ export class AudioProcessor {
   private audioChunks: Blob[] = [];
   private processingInterval: NodeJS.Timeout | null = null;
   private onAudioData: (data: Blob[]) => void;
-  private silenceStartTime: number | null = null;
-  private readonly SILENCE_THRESHOLD = -50; // dB
-  private readonly SILENCE_DURATION = 1000; // ms
   private readonly CHUNK_INTERVAL = 1000; // ms
 
   constructor(onAudioData: (data: Blob[]) => void) {
@@ -41,7 +36,6 @@ export class AudioProcessor {
       return true;
     } catch (error) {
       console.error('Error initializing audio:', error);
-      toast.error("Could not access microphone. Please check permissions.");
       return false;
     }
   }
@@ -68,8 +62,6 @@ export class AudioProcessor {
         this.audioChunks = [];
       }
     }, this.CHUNK_INTERVAL);
-
-    this.detectSilence();
   }
 
   private stopProcessing() {
@@ -78,32 +70,6 @@ export class AudioProcessor {
       this.processingInterval = null;
     }
   }
-
-  private detectSilence = () => {
-    if (!this.analyser) return;
-
-    const dataArray = new Float32Array(this.analyser.fftSize);
-    this.analyser.getFloatTimeDomainData(dataArray);
-
-    const rms = Math.sqrt(dataArray.reduce((acc, val) => acc + val * val, 0) / dataArray.length);
-    const db = 20 * Math.log10(rms);
-
-    if (db < this.SILENCE_THRESHOLD) {
-      if (!this.silenceStartTime) {
-        this.silenceStartTime = Date.now();
-      } else if (Date.now() - this.silenceStartTime > this.SILENCE_DURATION) {
-        if (this.audioChunks.length > 0) {
-          this.onAudioData([...this.audioChunks]);
-          this.audioChunks = [];
-        }
-        this.silenceStartTime = null;
-      }
-    } else {
-      this.silenceStartTime = null;
-    }
-
-    requestAnimationFrame(this.detectSilence);
-  };
 
   cleanup() {
     this.stopProcessing();

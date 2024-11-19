@@ -30,9 +30,7 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    console.log('Received audio chunk, processing...');
-
-    // Convert base64 to Uint8Array for Deno
+    // Convert base64 to Uint8Array
     const base64Data = audio.replace(/^data:audio\/\w+;base64,/, '');
     const binaryString = atob(base64Data);
     const bytes = new Uint8Array(binaryString.length);
@@ -40,18 +38,15 @@ serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Create a blob for OpenAI API
+    // Create audio file for OpenAI API
     const audioBlob = new Blob([bytes], { type: 'audio/webm' });
+    const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
 
-    console.log('Converting audio to transcription...');
-
-    // Get transcription from OpenAI
+    // Get transcription
     const transcription = await openai.audio.transcriptions.create({
-      file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' }),
+      file: audioFile,
       model: 'whisper-1',
     });
-
-    console.log('Transcription received:', transcription.text);
 
     if (!transcription.text.trim()) {
       return new Response(
@@ -60,7 +55,7 @@ serve(async (req) => {
       );
     }
 
-    // Get AI response using the transcription
+    // Get AI response
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -69,8 +64,6 @@ serve(async (req) => {
       ],
     });
 
-    console.log('Chat completion received');
-    
     // Convert response to speech
     const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -88,8 +81,6 @@ serve(async (req) => {
     if (!speechResponse.ok) {
       throw new Error(`OpenAI Speech API error: ${speechResponse.statusText}`);
     }
-
-    console.log('Speech response received, converting to base64...');
 
     const audioBuffer = await speechResponse.arrayBuffer();
     const audioBase64 = btoa(
