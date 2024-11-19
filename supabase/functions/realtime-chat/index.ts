@@ -16,9 +16,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const therapeuticPrompt = `As an AI therapist, chat with me as an AI cognitive-behavioral therapist. Adapt your approach to be sensitive to my cultural background, values, and beliefs, but do so naturally as part of the conversation. The goal is to make me feel heard and understood while providing relevant support, not to constantly highlight our differences.`;
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,7 +26,10 @@ serve(async (req) => {
     const { audio } = await req.json();
     
     if (!audio) {
-      throw new Error('No audio data provided');
+      return new Response(
+        JSON.stringify({ error: 'No audio data provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Convert base64 to Uint8Array
@@ -59,7 +61,7 @@ serve(async (req) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: therapeuticPrompt },
+        { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: transcription.text }
       ],
     });
@@ -98,8 +100,27 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in realtime-chat function:', error);
+    
+    // Handle OpenAI API specific errors
+    if (error.response) {
+      return new Response(
+        JSON.stringify({ 
+          error: `OpenAI API error: ${error.response.statusText}`,
+          details: error.response.data
+        }),
+        { 
+          status: error.response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Handle general errors
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: error.message
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
