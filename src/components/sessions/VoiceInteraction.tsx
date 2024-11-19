@@ -1,88 +1,46 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import VoiceVisualizer from "./VoiceVisualizer";
 import CallTimer from "./CallTimer";
 import AudioControls from "./AudioControls";
-import { AudioProcessor } from "./AudioProcessor";
 import {
   LiveKitRoom,
-  VideoConference,
-  GridLayout,
-  ParticipantTile,
+  AudioConference,
+  RoomAudioRenderer,
   ControlBar,
-  useTracks
+  useRoom,
+  useParticipants,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 
 const VoiceInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [callStatus, setCallStatus] = useState<'available' | 'on-call' | 'ended'>('available');
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const audioProcessorRef = useRef<AudioProcessor | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  useEffect(() => {
-    audioContextRef.current = new AudioContext();
-    return () => {
-      audioProcessorRef.current?.cleanup();
-      audioContextRef.current?.close();
-    };
-  }, []);
-
-  const processAudioData = async (audioChunks: Blob[]) => {
-    if (audioChunks.length === 0) return;
-    
-    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    const base64Audio = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(audioBlob);
-    });
-
-    try {
-      const { data, error } = await supabase.functions.invoke('realtime-chat', {
-        body: { 
-          audio: base64Audio,
-          roomId: roomId || crypto.randomUUID(),
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.roomId && !roomId) {
-        setRoomId(data.roomId);
-      }
-
-      if (data.reply) {
-        console.log('Reply:', data.reply);
-      }
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      toast.error("Failed to process audio. Please try again.");
-    }
-  };
+  const [token, setToken] = useState<string | null>(null);
 
   const startCall = async () => {
-    if (!audioProcessorRef.current) {
-      audioProcessorRef.current = new AudioProcessor(processAudioData);
-      const initialized = await audioProcessorRef.current.initialize();
-      if (!initialized) return;
+    try {
+      // In a real app, you would fetch a token from your server
+      const demoToken = process.env.VITE_LIVEKIT_TOKEN;
+      if (!demoToken) {
+        toast.error("LiveKit token not configured");
+        return;
+      }
+      
+      setToken(demoToken);
+      setCallStatus('on-call');
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting call:', error);
+      toast.error("Failed to start call. Please try again.");
     }
-
-    setCallStatus('on-call');
-    setIsRecording(true);
-    audioProcessorRef.current.startRecording();
   };
 
   const endCall = () => {
-    if (audioProcessorRef.current) {
-      audioProcessorRef.current.stopRecording();
-    }
     setIsRecording(false);
     setCallStatus('ended');
-    setRoomId(null);
+    setToken(null);
   };
 
   const resetCall = () => {
@@ -93,15 +51,19 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
         <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
-          {roomId && (
+          {token && (
             <LiveKitRoom
               serverUrl={process.env.VITE_LIVEKIT_URL}
-              token={process.env.VITE_LIVEKIT_TOKEN}
+              token={token}
               connect={true}
               video={false}
               audio={true}
             >
-              <VideoConference />
+              <div className="w-full">
+                <AudioConference />
+                <RoomAudioRenderer />
+                <ControlBar />
+              </div>
             </LiveKitRoom>
           )}
           
