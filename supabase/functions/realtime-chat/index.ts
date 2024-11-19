@@ -16,36 +16,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to validate and process audio data
+const SUPPORTED_FORMATS = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm'];
+
 async function processAudioData(audioData: string) {
   try {
-    // Extract mime type and validate format
     const mimeMatch = audioData.match(/^data:(audio\/[^;]+);base64,/);
     if (!mimeMatch) {
       throw new Error('Invalid audio data format');
     }
 
     const mimeType = mimeMatch[1];
+    const format = mimeType.split('/')[1];
+    
+    if (!SUPPORTED_FORMATS.includes(format)) {
+      throw new Error(`Unsupported audio format: ${format}. Supported formats: ${SUPPORTED_FORMATS.join(', ')}`);
+    }
+
     const base64Data = audioData.split(',')[1];
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    // Create temporary file with .webm extension
-    const tempFile = await Deno.makeTempFile({
-      prefix: "audio-",
-      suffix: ".webm",
-    });
-    
-    // Write binary data to temp file
-    await Deno.writeFile(tempFile, binaryData);
-    
-    // Create File object from the temp file
-    const fileBlob = await Deno.readFile(tempFile);
-    const file = new File([fileBlob], "audio.webm", { type: "audio/webm" });
-    
-    // Clean up temp file
-    await Deno.remove(tempFile);
-    
-    return file;
+    // Create File object with the correct format extension
+    return new File([binaryData], `audio.${format}`, { type: mimeType });
   } catch (error) {
     console.error('Error processing audio:', error);
     throw error;
@@ -53,7 +44,6 @@ async function processAudioData(audioData: string) {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -72,7 +62,6 @@ serve(async (req) => {
     const audioFile = await processAudioData(audio);
     console.log('Audio file processed successfully');
 
-    // Get transcription
     console.log('Sending to Whisper API...');
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
@@ -87,7 +76,6 @@ serve(async (req) => {
       );
     }
 
-    // Get AI response
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -96,7 +84,6 @@ serve(async (req) => {
       ],
     });
 
-    // Convert response to speech
     const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
@@ -130,7 +117,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in realtime-chat function:', error);
     
-    // Handle OpenAI API specific errors
     if (error.response) {
       return new Response(
         JSON.stringify({ 
@@ -144,7 +130,6 @@ serve(async (req) => {
       );
     }
 
-    // Handle general errors
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
