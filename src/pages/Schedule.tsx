@@ -71,15 +71,17 @@ const Schedule = () => {
                   <h2 className="text-xl font-semibold text-dara-navy">Schedule a Session</h2>
                   <p className="text-sm text-gray-500">Choose your preferred date and time</p>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  <div className="space-y-6 flex flex-col items-center">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      className="rounded-md border mx-auto"
-                      disabled={(date) => date < new Date()}
-                    />
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="space-y-6 flex-1 flex flex-col justify-center items-center">
+                    <div className="w-full max-w-[350px] flex items-center justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        className="rounded-md border"
+                        disabled={(date) => date < new Date()}
+                      />
+                    </div>
                     
                     <div className="space-y-2 w-full">
                       <label className="text-sm font-medium text-gray-700">Select Time</label>
