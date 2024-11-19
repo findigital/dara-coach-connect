@@ -30,7 +30,7 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    console.log('Received audio data, processing...');
+    console.log('Received audio chunk, processing...');
 
     // Convert base64 to Uint8Array for Deno
     const base64Data = audio.replace(/^data:audio\/\w+;base64,/, '');
@@ -41,21 +41,28 @@ serve(async (req) => {
     }
 
     // Create a blob for OpenAI API
-    const audioBlob = new Blob([bytes], { type: 'audio/wav' });
+    const audioBlob = new Blob([bytes], { type: 'audio/webm' });
 
     console.log('Converting audio to transcription...');
 
     // Get transcription from OpenAI
     const transcription = await openai.audio.transcriptions.create({
-      file: new File([audioBlob], 'audio.wav', { type: 'audio/wav' }),
+      file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' }),
       model: 'whisper-1',
     });
 
     console.log('Transcription received:', transcription.text);
 
+    if (!transcription.text.trim()) {
+      return new Response(
+        JSON.stringify({ message: 'No speech detected' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get AI response using the transcription
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: therapeuticPrompt },
         { role: 'user', content: transcription.text }
@@ -93,28 +100,13 @@ serve(async (req) => {
       JSON.stringify({
         reply: completion.choices[0].message.content,
         audioResponse: audioBase64,
+        transcription: transcription.text,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in realtime-chat function:', error);
-    
-    // Handle OpenAI API specific errors
-    if (error.response) {
-      return new Response(
-        JSON.stringify({ 
-          error: `OpenAI API error: ${error.response.statusText}`,
-          details: error.response.data
-        }),
-        { 
-          status: error.response.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Handle general errors
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

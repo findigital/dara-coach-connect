@@ -8,12 +8,18 @@ import VoiceVisualizer from "./VoiceVisualizer";
 import CallTimer from "./CallTimer";
 import { initializeAudioContext, playAudioResponse } from "./utils/audioUtils";
 
+const SILENCE_THRESHOLD = -50; // dB
+const SILENCE_DURATION = 1000; // ms
+
 const VoiceInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [callStatus, setCallStatus] = useState<'available' | 'on-call' | 'ended'>('available');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const silenceStartRef = useRef<number | null>(null);
+  const processingRef = useRef(false);
 
   useEffect(() => {
     audioContextRef.current = initializeAudioContext();
@@ -21,6 +27,13 @@ const VoiceInteraction = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
+          if (audioContextRef.current) {
+            const source = audioContextRef.current.createMediaStreamSource(stream);
+            analyserRef.current = audioContextRef.current.createAnalyser();
+            analyserRef.current.fftSize = 2048;
+            source.connect(analyserRef.current);
+          }
+
           mediaRecorderRef.current = new MediaRecorder(stream, {
             mimeType: 'audio/webm'
           });
@@ -32,35 +45,7 @@ const VoiceInteraction = () => {
           };
 
           mediaRecorderRef.current.onstop = async () => {
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-            const reader = new FileReader();
-            
-            reader.onloadend = async () => {
-              const base64Audio = reader.result as string;
-              try {
-                const { data, error } = await supabase.functions.invoke('realtime-chat', {
-                  body: { audio: base64Audio },
-                });
-
-                if (error) {
-                  console.error('Supabase function error:', error);
-                  throw error;
-                }
-
-                if (data.reply) {
-                  if (data.audioResponse) {
-                    await playAudioResponse(audioContextRef.current, data.audioResponse);
-                  }
-                }
-              } catch (error) {
-                console.error('Error processing audio:', error);
-                toast.error("Failed to process audio. Please try again.");
-                endCall();
-              }
-            };
-            
-            reader.readAsDataURL(audioBlob);
-            audioChunksRef.current = [];
+            await processAudioChunk();
           };
         })
         .catch(error => {
@@ -76,6 +61,69 @@ const VoiceInteraction = () => {
     };
   }, []);
 
+  const processAudioChunk = async () => {
+    if (processingRef.current || audioChunksRef.current.length === 0) return;
+    
+    processingRef.current = true;
+    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+    const reader = new FileReader();
+    
+    reader.onloadend = async () => {
+      const base64Audio = reader.result as string;
+      try {
+        const { data, error } = await supabase.functions.invoke('realtime-chat', {
+          body: { audio: base64Audio },
+        });
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
+
+        if (data.reply) {
+          if (data.audioResponse) {
+            await playAudioResponse(audioContextRef.current, data.audioResponse);
+          }
+          if (data.transcription) {
+            console.log('Transcription:', data.transcription);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing audio:', error);
+        toast.error("Failed to process audio. Please try again.");
+        endCall();
+      }
+      
+      audioChunksRef.current = [];
+      processingRef.current = false;
+    };
+    
+    reader.readAsDataURL(audioBlob);
+  };
+
+  const detectSilence = () => {
+    if (!analyserRef.current || !isRecording) return;
+
+    const dataArray = new Float32Array(analyserRef.current.fftSize);
+    analyserRef.current.getFloatTimeDomainData(dataArray);
+
+    const rms = Math.sqrt(dataArray.reduce((acc, val) => acc + val * val, 0) / dataArray.length);
+    const db = 20 * Math.log10(rms);
+
+    if (db < SILENCE_THRESHOLD) {
+      if (silenceStartRef.current === null) {
+        silenceStartRef.current = Date.now();
+      } else if (Date.now() - silenceStartRef.current > SILENCE_DURATION) {
+        processAudioChunk();
+        silenceStartRef.current = null;
+      }
+    } else {
+      silenceStartRef.current = null;
+    }
+
+    requestAnimationFrame(detectSilence);
+  };
+
   const startCall = () => {
     if (!mediaRecorderRef.current) {
       toast.error("Microphone not initialized");
@@ -85,7 +133,8 @@ const VoiceInteraction = () => {
     setCallStatus('on-call');
     setIsRecording(true);
     audioChunksRef.current = [];
-    mediaRecorderRef.current.start();
+    mediaRecorderRef.current.start(1000); // Collect data every second
+    detectSilence();
   };
 
   const endCall = () => {
@@ -94,6 +143,7 @@ const VoiceInteraction = () => {
     }
     setIsRecording(false);
     setCallStatus('ended');
+    silenceStartRef.current = null;
   };
 
   const resetCall = () => {
