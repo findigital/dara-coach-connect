@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
+import { initializeAudioContext, playAudioResponse } from "./utils/audioUtils";
+import ChatMessage from "./ChatMessage";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,10 +26,8 @@ const VoiceInteraction = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    // Initialize AudioContext
-    audioContextRef.current = new AudioContext();
+    audioContextRef.current = initializeAudioContext();
 
-    // Request microphone permissions when component mounts
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
@@ -52,14 +52,15 @@ const VoiceInteraction = () => {
 
                 if (error) throw error;
 
-                // Add user's audio message
-                setMessages(prev => [...prev, { role: 'user', content: 'Audio message sent' }]);
-                
-                // Add AI's response and play audio
                 if (data.reply) {
-                  setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+                  setMessages(prev => [
+                    ...prev,
+                    { role: 'user', content: 'Audio message sent' },
+                    { role: 'assistant', content: data.reply }
+                  ]);
+                  
                   if (data.audioResponse) {
-                    playAudioResponse(data.audioResponse);
+                    await playAudioResponse(audioContextRef.current, data.audioResponse);
                   }
                 }
               } catch (error) {
@@ -85,31 +86,6 @@ const VoiceInteraction = () => {
     };
   }, []);
 
-  const playAudioResponse = async (base64Audio: string) => {
-    try {
-      const audioContext = audioContextRef.current;
-      if (!audioContext) return;
-
-      // Convert base64 to ArrayBuffer
-      const binaryString = window.atob(base64Audio);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
-      // Create audio buffer and play
-      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      source.start(0);
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      toast.error("Failed to play audio response");
-    }
-  };
-
   const toggleRecording = () => {
     if (!mediaRecorderRef.current) {
       toast.error("Microphone not initialized");
@@ -130,8 +106,7 @@ const VoiceInteraction = () => {
 
     try {
       setIsLoading(true);
-      const userMessage: Message = { role: 'user', content };
-      setMessages(prev => [...prev, userMessage]);
+      setMessages(prev => [...prev, { role: 'user', content }]);
       setInput('');
 
       const { data, error } = await supabase.functions.invoke('chat-with-dara', {
@@ -140,12 +115,11 @@ const VoiceInteraction = () => {
 
       if (error) throw error;
 
-      const aiMessage: Message = { role: 'assistant', content: data.reply };
-      setMessages(prev => [...prev, aiMessage]);
-
-      // Play audio response if available
-      if (data.audioResponse) {
-        playAudioResponse(data.audioResponse);
+      if (data.reply) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+        if (data.audioResponse) {
+          await playAudioResponse(audioContextRef.current, data.audioResponse);
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -173,20 +147,7 @@ const VoiceInteraction = () => {
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-4">
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'user'
-                        ? 'bg-dara-yellow text-dara-navy ml-4'
-                        : 'bg-gray-100 text-gray-800 mr-4'
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                </div>
+                <ChatMessage key={index} {...message} />
               ))}
             </div>
           </ScrollArea>

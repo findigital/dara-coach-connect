@@ -1,4 +1,7 @@
 project_id = "bmmkkdrguescudrymcsl"
 
+[functions.realtime-chat]
+verify_jwt = false
+
 [functions.chat-with-dara]
 verify_jwt = false
