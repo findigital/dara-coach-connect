@@ -1,26 +1,16 @@
-import { Mic, Send, MessageSquare } from "lucide-react";
+import { Volume2, Mic, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Toggle } from "@/components/ui/toggle";
+import VoiceVisualizer from "./VoiceVisualizer";
+import CallTimer from "./CallTimer";
 import { initializeAudioContext, playAudioResponse } from "./utils/audioUtils";
-import ChatMessage from "./ChatMessage";
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 const VoiceInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVoiceMode, setIsVoiceMode] = useState(true);
+  const [callStatus, setCallStatus] = useState<'available' | 'on-call' | 'ended'>('available');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -53,12 +43,6 @@ const VoiceInteraction = () => {
                 if (error) throw error;
 
                 if (data.reply) {
-                  setMessages(prev => [
-                    ...prev,
-                    { role: 'user', content: 'Audio message sent' },
-                    { role: 'assistant', content: data.reply }
-                  ]);
-                  
                   if (data.audioResponse) {
                     await playAudioResponse(audioContextRef.current, data.audioResponse);
                   }
@@ -66,6 +50,7 @@ const VoiceInteraction = () => {
               } catch (error) {
                 console.error('Error processing audio:', error);
                 toast.error("Failed to process audio. Please try again.");
+                endCall();
               }
             };
             
@@ -86,103 +71,101 @@ const VoiceInteraction = () => {
     };
   }, []);
 
-  const toggleRecording = () => {
+  const startCall = () => {
     if (!mediaRecorderRef.current) {
       toast.error("Microphone not initialized");
       return;
     }
 
-    if (isRecording) {
-      mediaRecorderRef.current.stop();
-    } else {
-      audioChunksRef.current = [];
-      mediaRecorderRef.current.start();
-    }
-    setIsRecording(!isRecording);
+    setCallStatus('on-call');
+    setIsRecording(true);
+    audioChunksRef.current = [];
+    mediaRecorderRef.current.start();
   };
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
-
-    try {
-      setIsLoading(true);
-      setMessages(prev => [...prev, { role: 'user', content }]);
-      setInput('');
-
-      const { data, error } = await supabase.functions.invoke('chat-with-dara', {
-        body: { message: content },
-      });
-
-      if (error) throw error;
-
-      if (data.reply) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-        if (data.audioResponse) {
-          await playAudioResponse(audioContextRef.current, data.audioResponse);
-        }
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error("Failed to send message. Please try again.");
-    } finally {
-      setIsLoading(false);
+  const endCall = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
     }
+    setIsRecording(false);
+    setCallStatus('ended');
+  };
+
+  const resetCall = () => {
+    setCallStatus('available');
   };
 
   return (
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
-          <Toggle
-            pressed={isVoiceMode}
-            onPressedChange={setIsVoiceMode}
-            aria-label="Toggle voice mode"
-            className="ml-2"
-          >
-            {isVoiceMode ? <Mic className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
-          </Toggle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col space-y-4">
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <ChatMessage key={index} {...message} />
-              ))}
-            </div>
-          </ScrollArea>
-
-          <div className="flex items-center gap-2 pt-4">
-            {isVoiceMode ? (
-              <Button
-                variant="outline"
-                size="icon"
-                className={`${isRecording ? 'bg-red-100 hover:bg-red-200' : ''}`}
-                onClick={toggleRecording}
-              >
-                <Mic className={`h-5 w-5 ${isRecording ? 'text-red-500' : ''}`} />
-              </Button>
-            ) : (
+        <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
+          <VoiceVisualizer isActive={isRecording} />
+          
+          <div className="text-center mb-4">
+            {callStatus === 'available' && (
               <>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !isLoading) {
-                      sendMessage(input);
-                    }
-                  }}
-                />
+                <p className="text-lg mb-2">Dara</p>
+                <p className="text-sm text-green-500 flex items-center justify-center gap-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  Available
+                </p>
+              </>
+            )}
+          </div>
+
+          <CallTimer 
+            isActive={callStatus === 'on-call'} 
+            onReset={resetCall}
+          />
+
+          {callStatus === 'ended' && (
+            <p className="text-gray-600 mb-4">Call Ended</p>
+          )}
+
+          <div className="flex gap-4">
+            {callStatus === 'available' && (
+              <Button
+                onClick={startCall}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+              >
+                Start a call
+              </Button>
+            )}
+
+            {callStatus === 'on-call' && (
+              <>
                 <Button
-                  onClick={() => sendMessage(input)}
-                  disabled={isLoading || !input.trim()}
-                  className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full w-12 h-12"
                 >
-                  <Send className="h-5 w-5" />
+                  <Volume2 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full w-12 h-12"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="rounded-full w-12 h-12"
+                  onClick={endCall}
+                >
+                  <X className="h-5 w-5" />
                 </Button>
               </>
+            )}
+
+            {callStatus === 'ended' && (
+              <Button
+                onClick={resetCall}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+              >
+                Start a call
+              </Button>
             )}
           </div>
         </CardContent>
