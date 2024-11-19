@@ -6,7 +6,6 @@ import VoiceVisualizer from "./VoiceVisualizer";
 import CallTimer from "./CallTimer";
 import AudioControls from "./AudioControls";
 import { AudioProcessor } from "./AudioProcessor";
-import { Room } from '@livekit/components-react';
 
 const VoiceInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -85,10 +84,6 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
         <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
-          {roomId && (
-            <Room name={roomId} />
-          )}
-          
           <VoiceVisualizer isActive={isRecording} />
           
           <div className="text-center mb-4">
