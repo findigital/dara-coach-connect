@@ -16,6 +16,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to validate and process audio data
+async function processAudioData(audioData: string) {
+  try {
+    // Extract mime type and validate format
+    const mimeMatch = audioData.match(/^data:(audio\/[^;]+);base64,/);
+    if (!mimeMatch) {
+      throw new Error('Invalid audio data format');
+    }
+
+    const mimeType = mimeMatch[1];
+    const base64Data = audioData.split(',')[1];
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+    // Create File object
+    return new File([binaryData], 'audio.webm', { type: mimeType });
+  } catch (error) {
+    console.error('Error processing audio:', error);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -32,17 +53,8 @@ serve(async (req) => {
       );
     }
 
-    // Convert base64 to Uint8Array
-    const base64Data = audio.replace(/^data:audio\/\w+;base64,/, '');
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    // Create audio file for OpenAI API
-    const audioBlob = new Blob([bytes], { type: 'audio/webm' });
-    const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
+    // Process audio data
+    const audioFile = await processAudioData(audio);
 
     // Get transcription
     const transcription = await openai.audio.transcriptions.create({
@@ -81,18 +93,17 @@ serve(async (req) => {
     });
 
     if (!speechResponse.ok) {
-      throw new Error(`OpenAI Speech API error: ${speechResponse.statusText}`);
+      const errorData = await speechResponse.json().catch(() => ({}));
+      throw new Error(`OpenAI Speech API error: ${speechResponse.statusText}. ${JSON.stringify(errorData)}`);
     }
 
     const audioBuffer = await speechResponse.arrayBuffer();
-    const audioBase64 = btoa(
-      String.fromCharCode(...new Uint8Array(audioBuffer))
-    );
+    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
 
     return new Response(
       JSON.stringify({
         reply: completion.choices[0].message.content,
-        audioResponse: audioBase64,
+        audioResponse: `data:audio/mpeg;base64,${audioBase64}`,
         transcription: transcription.text,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -26,32 +26,32 @@ const VoiceInteraction = () => {
     if (audioChunks.length === 0) return;
     
     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    const reader = new FileReader();
-    
-    reader.onloadend = async () => {
-      const base64Audio = reader.result as string;
-      try {
-        const { data, error } = await supabase.functions.invoke('realtime-chat', {
-          body: { audio: base64Audio },
-        });
+    const base64Audio = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(audioBlob);
+    });
 
-        if (error) throw error;
+    try {
+      const { data, error } = await supabase.functions.invoke('realtime-chat', {
+        body: { audio: base64Audio },
+      });
 
-        if (data.reply) {
-          if (data.audioResponse) {
-            await playAudioResponse(audioContextRef.current, data.audioResponse);
-          }
-          if (data.transcription) {
-            console.log('Transcription:', data.transcription);
-          }
+      if (error) throw error;
+
+      if (data.reply) {
+        if (data.audioResponse) {
+          const audio = new Audio(data.audioResponse);
+          await audio.play();
         }
-      } catch (error) {
-        console.error('Error processing audio:', error);
-        toast.error("Failed to process audio. Please try again.");
+        if (data.transcription) {
+          console.log('Transcription:', data.transcription);
+        }
       }
-    };
-    
-    reader.readAsDataURL(audioBlob);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      toast.error("Failed to process audio. Please try again.");
+    }
   };
 
   const startCall = async () => {
