@@ -104,9 +104,7 @@ const SessionNotes = () => {
                             <span>{activity.address}</span>
                           </div>
                           <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                            <Clock className="h-4 w-4" />
-                            <span>{activity.timestamp}</span>
-                            <span className="text-dara-yellow font-medium">({activity.distance})</span>
+                            <span className="text-dara-navy font-medium">({activity.distance})</span>
                           </div>
                         </div>
                         <Button
