@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Sessions from "./pages/Sessions";
 import PastSessions from "./pages/PastSessions";
 import Schedule from "./pages/Schedule";
+import Wellness from "./pages/Wellness";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/past-sessions" element={<PastSessions />} />
           <Route path="/schedule" element={<Schedule />} />
+          <Route path="/wellness" element={<Wellness />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
