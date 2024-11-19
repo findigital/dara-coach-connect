@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 if (!OPENAI_API_KEY) {
@@ -28,7 +29,7 @@ async function processAudioData(audioData: string) {
     const format = mimeType.split('/')[1];
     
     if (!SUPPORTED_FORMATS.includes(format)) {
-      throw new Error(`Unsupported audio format: ${format}. Supported formats: ${SUPPORTED_FORMATS.join(', ')}`);
+      throw new Error(`Unsupported audio format: ${format}`);
     }
 
     const base64Data = audioData.split(',')[1];
@@ -47,7 +48,7 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json();
+    const { audio, roomId } = await req.json();
     
     if (!audio) {
       return new Response(
@@ -82,50 +83,66 @@ serve(async (req) => {
       ],
     });
 
-    const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        voice: 'alloy',
-        input: completion.choices[0].message.content,
-      }),
-    });
+    const reply = completion.choices[0].message.content;
+    console.log('Generated reply:', reply);
 
-    if (!speechResponse.ok) {
-      const errorData = await speechResponse.json().catch(() => ({}));
-      throw new Error(`OpenAI Speech API error: ${speechResponse.statusText}. ${JSON.stringify(errorData)}`);
+    try {
+      const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          voice: 'alloy',
+          input: reply,
+        }),
+      });
+
+      if (!speechResponse.ok) {
+        throw new Error(`Speech API error: ${speechResponse.statusText}`);
+      }
+
+      const audioBuffer = await speechResponse.arrayBuffer();
+      const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+
+      return new Response(
+        JSON.stringify({
+          reply,
+          audioResponse: `data:audio/mpeg;base64,${audioBase64}`,
+          transcription: transcription.text,
+          roomId: roomId || crypto.randomUUID(),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (speechError) {
+      console.error('Speech synthesis error:', speechError);
+      // Return text response even if speech synthesis fails
+      return new Response(
+        JSON.stringify({
+          reply,
+          transcription: transcription.text,
+          roomId: roomId || crypto.randomUUID(),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    const audioBuffer = await speechResponse.arrayBuffer();
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-
-    return new Response(
-      JSON.stringify({
-        reply: completion.choices[0].message.content,
-        audioResponse: `data:audio/mpeg;base64,${audioBase64}`,
-        transcription: transcription.text,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Error in realtime-chat function:', error);
     
-    const status = error.response?.status || 500;
-    const errorMessage = error.response?.statusText || 'Internal server error';
+    const errorMessage = error.message || 'Internal server error';
+    const status = error.status || 500;
     
     return new Response(
       JSON.stringify({ 
-        error: `OpenAI API error`,
+        error: 'OpenAI API error',
         message: errorMessage,
-        details: error.response?.data || 'No additional details available'
+        details: error.response?.data || error.message || 'No additional details available'
       }),
       { 
-        status: status,
+        status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
