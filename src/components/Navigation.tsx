@@ -1,11 +1,14 @@
-import { Link, useLocation } from "react-router-dom";
-import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -14,6 +17,21 @@ const Navigation = () => {
     { path: "/schedule", label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
     { path: "/wellness", label: "Wellness", icon: <Compass className="h-5 w-5" /> },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+      toast({
+        title: "Logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error logging out",
+        variant: "destructive",
+      });
+    }
+  };
 
   const NavigationContent = () => (
     <div className="flex flex-col h-full">
@@ -51,6 +69,9 @@ const Navigation = () => {
           </Button>
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </div>
