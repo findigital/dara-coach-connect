@@ -78,7 +78,7 @@ const WellnessActivities = () => {
             </Button>
           </div>
           
-          <ScrollArea className="h-[calc(100vh-26rem)]">
+          <ScrollArea className="h-[calc(100vh-32rem)]">
             <div className="space-y-4 pr-4">
               {locations.map((location) => (
                 <Card 
