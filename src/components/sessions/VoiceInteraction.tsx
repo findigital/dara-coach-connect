@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import VoiceVisualizer from "./VoiceVisualizer";
 import CallTimer from "./CallTimer";
-import { playAudioResponse } from "./utils/audioUtils";
 import AudioControls from "./AudioControls";
 import { AudioProcessor } from "./AudioProcessor";
+import { Room } from '@livekit/components-react';
 
 const VoiceInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [callStatus, setCallStatus] = useState<'available' | 'on-call' | 'ended'>('available');
+  const [roomId, setRoomId] = useState<string | null>(null);
   const audioProcessorRef = useRef<AudioProcessor | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -34,19 +35,20 @@ const VoiceInteraction = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('realtime-chat', {
-        body: { audio: base64Audio },
+        body: { 
+          audio: base64Audio,
+          roomId: roomId || crypto.randomUUID(),
+        },
       });
 
       if (error) throw error;
 
+      if (data.roomId && !roomId) {
+        setRoomId(data.roomId);
+      }
+
       if (data.reply) {
-        if (data.audioResponse) {
-          const audio = new Audio(data.audioResponse);
-          await audio.play();
-        }
-        if (data.transcription) {
-          console.log('Transcription:', data.transcription);
-        }
+        console.log('Reply:', data.reply);
       }
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -72,6 +74,7 @@ const VoiceInteraction = () => {
     }
     setIsRecording(false);
     setCallStatus('ended');
+    setRoomId(null);
   };
 
   const resetCall = () => {
@@ -82,6 +85,10 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
         <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
+          {roomId && (
+            <Room name={roomId} />
+          )}
+          
           <VoiceVisualizer isActive={isRecording} />
           
           <div className="text-center mb-4">
