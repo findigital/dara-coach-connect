@@ -16,10 +16,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SUPPORTED_FORMATS = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm'];
+const SUPPORTED_FORMATS = ['webm', 'mp3', 'wav', 'ogg'];
 
 async function processAudioData(audioData: string) {
   try {
+    console.log('Processing audio data...');
     const mimeMatch = audioData.match(/^data:(audio\/[^;]+);base64,/);
     if (!mimeMatch) {
       throw new Error('Invalid audio data format');
@@ -48,6 +49,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received request');
     const { audio, roomId } = await req.json();
     
     if (!audio) {
@@ -57,11 +59,10 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing audio data...');
     const audioFile = await processAudioData(audio);
-    console.log('Audio file processed successfully');
+    console.log('Audio processed successfully');
 
-    console.log('Sending to Whisper API...');
+    console.log('Transcribing audio...');
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
@@ -75,6 +76,7 @@ serve(async (req) => {
       );
     }
 
+    console.log('Generating completion...');
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -87,6 +89,7 @@ serve(async (req) => {
     console.log('Generated reply:', reply);
 
     try {
+      console.log('Generating speech...');
       const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
         headers: {
