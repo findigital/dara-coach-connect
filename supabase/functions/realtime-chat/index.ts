@@ -29,12 +29,20 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    // Convert base64 to buffer
-    const audioData = Buffer.from(audio.split('base64,')[1], 'base64');
+    // Convert base64 to Uint8Array for Deno
+    const base64Data = audio.split('base64,')[1];
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Create a blob for OpenAI API
+    const audioBlob = new Blob([bytes], { type: 'audio/webm' });
 
     // Get transcription from OpenAI
     const transcription = await openai.audio.transcriptions.create({
-      file: new File([audioData], 'audio.webm', { type: 'audio/webm' }),
+      file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' }),
       model: 'whisper-1',
     });
 
@@ -42,7 +50,7 @@ serve(async (req) => {
 
     // Get AI response using the transcription
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: therapeuticPrompt },
         { role: 'user', content: transcription.text }
@@ -70,7 +78,9 @@ serve(async (req) => {
     }
 
     const audioBuffer = await speechResponse.arrayBuffer();
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+    const audioBase64 = btoa(
+      String.fromCharCode(...new Uint8Array(audioBuffer))
+    );
 
     return new Response(
       JSON.stringify({
