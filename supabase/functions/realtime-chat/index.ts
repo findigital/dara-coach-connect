@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -21,24 +22,31 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Convert base64 to Uint8Array for the audio file
+    const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+    const audioBlob = new Blob([binaryAudio], { type: 'audio/wav' });
+
+    // Create form data for the audio transcription request
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.wav');
+    formData.append('model', 'whisper-1');
+
+    // Get transcription from OpenAI
+    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: "whisper-1",
-        audio: audio,
-      }),
+      body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+    if (!transcriptionResponse.ok) {
+      throw new Error(`OpenAI Transcription API error: ${transcriptionResponse.statusText}`);
     }
 
-    const transcription = await response.json();
-    
+    const transcription = await transcriptionResponse.json();
+    console.log('Transcription:', transcription);
+
     // Get AI response using the transcription
     const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -47,7 +55,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: therapeuticPrompt },
           { role: 'user', content: transcription.text }
@@ -60,6 +68,7 @@ serve(async (req) => {
     }
 
     const chatData = await chatResponse.json();
+    console.log('Chat response:', chatData);
     
     // Convert response to speech
     const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
