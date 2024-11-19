@@ -29,8 +29,23 @@ async function processAudioData(audioData: string) {
     const base64Data = audioData.split(',')[1];
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    // Create File object
-    return new File([binaryData], 'audio.webm', { type: mimeType });
+    // Create temporary file with .webm extension
+    const tempFile = await Deno.makeTempFile({
+      prefix: "audio-",
+      suffix: ".webm",
+    });
+    
+    // Write binary data to temp file
+    await Deno.writeFile(tempFile, binaryData);
+    
+    // Create File object from the temp file
+    const fileBlob = await Deno.readFile(tempFile);
+    const file = new File([fileBlob], "audio.webm", { type: "audio/webm" });
+    
+    // Clean up temp file
+    await Deno.remove(tempFile);
+    
+    return file;
   } catch (error) {
     console.error('Error processing audio:', error);
     throw error;
@@ -53,14 +68,17 @@ serve(async (req) => {
       );
     }
 
-    // Process audio data
+    console.log('Processing audio data...');
     const audioFile = await processAudioData(audio);
+    console.log('Audio file processed successfully');
 
     // Get transcription
+    console.log('Sending to Whisper API...');
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
     });
+    console.log('Transcription received:', transcription.text);
 
     if (!transcription.text.trim()) {
       return new Response(
@@ -71,7 +89,7 @@ serve(async (req) => {
 
     // Get AI response
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: transcription.text }
