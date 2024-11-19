@@ -63,6 +63,11 @@ const Schedule = () => {
       
       <div className="flex-1 lg:ml-64">
         <main className="h-screen pt-16 lg:pt-0">
+          <div className="bg-white border-b">
+            <div className="container mx-auto py-4">
+              <h1 className="text-2xl font-semibold text-dara-navy">Schedule</h1>
+            </div>
+          </div>
           <div className="container mx-auto p-6">
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Schedule New Session */}
