@@ -6,7 +6,14 @@ import VoiceVisualizer from "./VoiceVisualizer";
 import CallTimer from "./CallTimer";
 import AudioControls from "./AudioControls";
 import { AudioProcessor } from "./AudioProcessor";
-import { Room } from '@livekit/components-react';
+import {
+  LiveKitRoom,
+  VideoConference,
+  GridLayout,
+  ParticipantTile,
+  ControlBar,
+  useTracks
+} from '@livekit/components-react';
 import '@livekit/components-styles';
 
 const VoiceInteraction = () => {
@@ -86,7 +93,17 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
         <CardContent className="flex-1 flex flex-col items-center justify-center space-y-4 pt-6">
-          {roomId && <Room name={roomId} />}
+          {roomId && (
+            <LiveKitRoom
+              serverUrl={process.env.VITE_LIVEKIT_URL}
+              token={process.env.VITE_LIVEKIT_TOKEN}
+              connect={true}
+              video={false}
+              audio={true}
+            >
+              <VideoConference />
+            </LiveKitRoom>
+          )}
           
           <VoiceVisualizer isActive={isRecording} />
           
