@@ -21,7 +21,9 @@ const VoiceInteraction = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          mediaRecorderRef.current = new MediaRecorder(stream);
+          mediaRecorderRef.current = new MediaRecorder(stream, {
+            mimeType: 'audio/webm'
+          });
           
           mediaRecorderRef.current.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -30,17 +32,20 @@ const VoiceInteraction = () => {
           };
 
           mediaRecorderRef.current.onstop = async () => {
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             const reader = new FileReader();
             
             reader.onloadend = async () => {
-              const base64Audio = (reader.result as string).split(',')[1];
+              const base64Audio = reader.result as string;
               try {
                 const { data, error } = await supabase.functions.invoke('realtime-chat', {
                   body: { audio: base64Audio },
                 });
 
-                if (error) throw error;
+                if (error) {
+                  console.error('Supabase function error:', error);
+                  throw error;
+                }
 
                 if (data.reply) {
                   if (data.audioResponse) {

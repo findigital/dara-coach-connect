@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -29,8 +30,10 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
+    console.log('Received audio data, processing...');
+
     // Convert base64 to Uint8Array for Deno
-    const base64Data = audio.split('base64,')[1];
+    const base64Data = audio.replace(/^data:audio\/\w+;base64,/, '');
     const binaryString = atob(base64Data);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -38,15 +41,17 @@ serve(async (req) => {
     }
 
     // Create a blob for OpenAI API
-    const audioBlob = new Blob([bytes], { type: 'audio/webm' });
+    const audioBlob = new Blob([bytes], { type: 'audio/wav' });
+
+    console.log('Converting audio to transcription...');
 
     // Get transcription from OpenAI
     const transcription = await openai.audio.transcriptions.create({
-      file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' }),
+      file: new File([audioBlob], 'audio.wav', { type: 'audio/wav' }),
       model: 'whisper-1',
     });
 
-    console.log('Transcription:', transcription);
+    console.log('Transcription received:', transcription.text);
 
     // Get AI response using the transcription
     const completion = await openai.chat.completions.create({
@@ -57,7 +62,7 @@ serve(async (req) => {
       ],
     });
 
-    console.log('Chat response:', completion);
+    console.log('Chat completion received');
     
     // Convert response to speech
     const speechResponse = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -76,6 +81,8 @@ serve(async (req) => {
     if (!speechResponse.ok) {
       throw new Error(`OpenAI Speech API error: ${speechResponse.statusText}`);
     }
+
+    console.log('Speech response received, converting to base64...');
 
     const audioBuffer = await speechResponse.arrayBuffer();
     const audioBase64 = btoa(
