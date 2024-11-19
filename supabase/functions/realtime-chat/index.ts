@@ -35,7 +35,6 @@ async function processAudioData(audioData: string) {
     const base64Data = audioData.split(',')[1];
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    // Create File object with the correct format extension
     return new File([binaryData], `audio.${format}`, { type: mimeType });
   } catch (error) {
     console.error('Error processing audio:', error);
@@ -77,7 +76,7 @@ serve(async (req) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: transcription.text }
@@ -117,26 +116,17 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in realtime-chat function:', error);
     
-    if (error.response) {
-      return new Response(
-        JSON.stringify({ 
-          error: `OpenAI API error: ${error.response.statusText}`,
-          details: error.response.data
-        }),
-        { 
-          status: error.response.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
+    const status = error.response?.status || 500;
+    const errorMessage = error.response?.statusText || 'Internal server error';
+    
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
-        message: error.message
+        error: `OpenAI API error`,
+        message: errorMessage,
+        details: error.response?.data || 'No additional details available'
       }),
       { 
-        status: 500,
+        status: status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
