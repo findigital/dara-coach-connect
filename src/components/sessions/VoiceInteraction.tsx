@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { playAudioFromBlob } from "@/utils/audioUtils";
 import SessionHeader from "./SessionHeader";
 import SessionContent from "./SessionContent";

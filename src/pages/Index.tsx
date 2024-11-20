@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { Calendar, MessageSquare, Bell, ClipboardList, Compass } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-white flex">
       <Navigation />
@@ -43,7 +45,7 @@ const Index = () => {
                 </Card>
               </Link>
 
-              <Link to="/todos" className="md:col-span-1">
+              <div onClick={() => navigate('/past-sessions')} className="md:col-span-1 cursor-pointer">
                 <Card className="p-6 card-hover h-[250px] cursor-pointer">
                   <div className="flex flex-col h-full">
                     <div className="bg-dara-yellow rounded-full p-3 w-fit">
@@ -55,7 +57,7 @@ const Index = () => {
                     </div>
                   </div>
                 </Card>
-              </Link>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
