@@ -1,12 +1,13 @@
-import { Mic, Send, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/AuthProvider";
+import MessageList from "./MessageList";
+import MessageInput from "./MessageInput";
+import { playAudioFromBlob } from "@/utils/audioUtils";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -71,20 +72,37 @@ const VoiceInteraction = () => {
 
   const playMessage = async (text: string) => {
     try {
+      console.log('Requesting text-to-speech for:', text);
       const response = await supabase.functions.invoke('text-to-speech', {
         body: { text },
       });
 
-      if (response.error) throw response.error;
-
-      const blob = new Blob([response.data], { type: 'audio/mpeg' });
-      const url = URL.createObjectURL(blob);
-
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current.play();
-        setIsSpeaking(true);
+      if (response.error) {
+        console.error('TTS API error:', response.error);
+        throw response.error;
       }
+
+      console.log('TTS response received:', response);
+      
+      // Convert the base64 string to a Blob
+      const audioData = atob(response.data);
+      const arrayBuffer = new Uint8Array(audioData.length);
+      for (let i = 0; i < audioData.length; i++) {
+        arrayBuffer[i] = audioData.charCodeAt(i);
+      }
+      const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      
+      const audio = await playAudioFromBlob(blob);
+      audioRef.current = audio;
+      
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
+        toast.error("Failed to play audio");
+      };
+      
+      audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
       toast.error("Failed to play audio");
@@ -95,10 +113,11 @@ const VoiceInteraction = () => {
     if (audioRef.current) {
       if (isSpeaking) {
         audioRef.current.pause();
+        setIsSpeaking(false);
       } else {
         audioRef.current.play();
+        setIsSpeaking(true);
       }
-      setIsSpeaking(!isSpeaking);
     }
   };
 
@@ -168,59 +187,17 @@ const VoiceInteraction = () => {
           )}
         </CardHeader>
         <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-          <audio ref={audioRef} onEnded={() => setIsSpeaking(false)} />
-          
           {currentSessionId ? (
             <>
-              <ScrollArea className="flex-1 h-[calc(100vh-300px)] pr-4">
-                <div className="space-y-4">
-                  {messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.role === 'user'
-                            ? 'bg-dara-yellow text-dara-navy ml-4'
-                            : 'bg-gray-100 text-gray-800 mr-4'
-                        }`}
-                      >
-                        {message.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <div className="flex items-center gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`${isActive ? 'bg-red-100 hover:bg-red-200' : ''}`}
-                  onClick={() => setIsActive(!isActive)}
-                >
-                  <Mic className={`h-5 w-5 ${isActive ? 'text-red-500' : ''}`} />
-                </Button>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !isLoading) {
-                      sendMessage(input);
-                    }
-                  }}
-                />
-                <Button
-                  onClick={() => sendMessage(input)}
-                  disabled={isLoading || !input.trim()}
-                  className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
+              <MessageList messages={messages} />
+              <MessageInput
+                input={input}
+                setInput={setInput}
+                isLoading={isLoading}
+                isActive={isActive}
+                setIsActive={setIsActive}
+                onSendMessage={sendMessage}
+              />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center flex-col gap-4">

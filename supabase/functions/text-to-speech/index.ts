@@ -15,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { text } = await req.json();
+    console.log('Received text for TTS:', text);
 
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -30,16 +31,18 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const error = await response.text();
+      console.error('OpenAI TTS API error:', error);
+      throw new Error(`OpenAI API error: ${error}`);
     }
 
-    const audioData = await response.arrayBuffer();
+    const audioBuffer = await response.arrayBuffer();
+    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
     
-    return new Response(audioData, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'audio/mpeg',
-      },
+    console.log('Successfully generated audio');
+    
+    return new Response(JSON.stringify(base64Audio), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in text-to-speech function:', error);
