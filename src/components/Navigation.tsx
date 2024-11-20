@@ -37,7 +37,11 @@ const Navigation = () => {
     <div className="flex flex-col h-full">
       <div className="p-6">
         <Link to="/" className="flex items-center">
-          <span className="logo text-2xl">dara</span>
+          <img 
+            src="/lovable-uploads/a79631f1-6aa3-48c0-9452-5c5358ba1d2f.png" 
+            alt="dara logo" 
+            className="h-8 w-auto"
+          />
         </Link>
       </div>
 
@@ -84,7 +88,11 @@ const Navigation = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 p-4 bg-white border-b z-50">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <span className="logo text-2xl">dara</span>
+            <img 
+              src="/lovable-uploads/a79631f1-6aa3-48c0-9452-5c5358ba1d2f.png" 
+              alt="dara logo" 
+              className="h-6 w-auto"
+            />
           </Link>
           <Sheet>
             <SheetTrigger asChild>
