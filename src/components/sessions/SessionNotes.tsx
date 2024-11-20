@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Save, Trash2 } from "lucide-react";
+import { Clock, Save, Trash2, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,30 +113,40 @@ const SessionNotes = () => {
           <div>
             <h3 className="text-lg font-medium text-dara-navy mb-4">Session History</h3>
             <ScrollArea className="h-[calc(100vh-26rem)]">
-              <div className="space-y-4 pr-4">
-                {notes.map((note) => (
-                  <Card 
-                    key={note.id} 
-                    className="group hover:-translate-y-1 transition-all duration-200"
-                  >
-                    <CardContent className="p-4 relative">
-                      <p className="text-gray-800 pr-8">{note.content}</p>
-                      <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        <span>{new Date(note.created_at).toLocaleString()}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
-                        onClick={() => handleDeleteNote(note.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {notes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                  <StickyNote className="h-12 w-12 mb-4 text-dara-yellow" />
+                  <p className="text-lg font-medium mb-2">No notes yet</p>
+                  <p className="text-sm text-center max-w-[280px]">
+                    Start taking notes about your coaching sessions. They'll appear here for you to review later.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 pr-4">
+                  {notes.map((note) => (
+                    <Card 
+                      key={note.id} 
+                      className="group hover:-translate-y-1 transition-all duration-200"
+                    >
+                      <CardContent className="p-4 relative">
+                        <p className="text-gray-800 pr-8">{note.content}</p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                          <Clock className="h-4 w-4" />
+                          <span>{new Date(note.created_at).toLocaleString()}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
+                          onClick={() => handleDeleteNote(note.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </ScrollArea>
           </div>
         </CardContent>
