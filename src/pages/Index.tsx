@@ -3,9 +3,41 @@ import { Card } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { Calendar, MessageSquare, Bell, ClipboardList, Compass } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const [sessionCount, setSessionCount] = useState(0);
+
+  useEffect(() => {
+    const fetchSessionCount = async () => {
+      if (!session?.user?.id) return;
+      
+      const { count, error } = await supabase
+        .from('coaching_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', session.user.id);
+      
+      if (error) {
+        console.error('Error fetching session count:', error);
+        return;
+      }
+      
+      setSessionCount(count || 0);
+    };
+
+    fetchSessionCount();
+  }, [session?.user?.id]);
+
+  const getEncouragingText = (count: number) => {
+    if (count === 0) return "Start your journey with your first session!";
+    if (count === 1) return "Great start! Keep the momentum going!";
+    if (count < 5) return "You're building a great habit!";
+    return "Amazing dedication! Keep it up!";
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -38,8 +70,8 @@ const Index = () => {
                       <MessageSquare className="h-6 w-6 text-dara-navy" />
                     </div>
                     <div className="mt-4">
-                      <h2 className="text-3xl font-bold mb-2">3 Sessions</h2>
-                      <p className="text-gray-300">Keep the streak going!</p>
+                      <h2 className="text-3xl font-bold mb-2">{sessionCount} {sessionCount === 1 ? 'Session' : 'Sessions'}</h2>
+                      <p className="text-gray-300">{getEncouragingText(sessionCount)}</p>
                     </div>
                   </div>
                 </Card>
