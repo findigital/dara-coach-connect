@@ -114,7 +114,7 @@ const PastSessions = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-4 space-y-4">
-        <h2 className="text-xl font-semibold text-dara-navy px-2">Past Sessions</h2>
+        {/* Removed the redundant heading */}
         <div className="grid lg:grid-cols-2 gap-6">
           <SessionList
             sessions={sessions || []}
