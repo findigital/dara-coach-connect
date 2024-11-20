@@ -43,14 +43,14 @@ serve(async (req) => {
         updateColumn = 'summary';
         break;
       case 'action_items':
-        prompt = `Based on this coaching session chat history, generate 3-5 specific and unique action items. Each action item should be:
+        prompt = `Based on this coaching session chat history, generate EXACTLY 3 specific and unique action items. Each action item should be:
 - Clear and actionable
 - Start with a verb
 - Under 15 words
 - Focus on a different aspect or strategy
 - Be directly related to the discussion
 
-Format your response as a simple list with one action item per line, without numbers or bullet points.
+Format your response as a simple list with one action item per line, without numbers or bullet points. You must generate exactly 3 items, no more, no less.
 
 Chat history:
 ${chatHistory}`;
@@ -72,7 +72,7 @@ ${chatHistory}`;
           { 
             role: 'system', 
             content: type === 'action_items'
-              ? 'You are a professional coach creating focused action items. Generate 3-5 unique, actionable tasks without any formatting or markup.'
+              ? 'You are a professional coach creating focused action items. Generate exactly 3 unique, actionable tasks without any formatting or markup.'
               : 'You are a professional coach helping to analyze coaching sessions. Make the language personal and direct.'
           },
           { role: 'user', content: prompt }
@@ -92,7 +92,7 @@ ${chatHistory}`;
       const actionItems = generatedContent.split('\n')
         .map(item => item.trim())
         .filter(item => item.length > 0)
-        .slice(0, 5) // Ensure maximum of 5 items
+        .slice(0, 3) // Ensure exactly 3 items
         .map(content => ({
           session_id: sessionId,
           content: content
