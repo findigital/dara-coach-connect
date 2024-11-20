@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -39,9 +39,9 @@ const PastSessions = () => {
       
       return data || [];
     },
-    refetchInterval: (data) => {
+    refetchInterval: (data = []) => {
       // Check if any sessions are missing summaries
-      const hasPendingSummaries = data?.some(session => !session.summary);
+      const hasPendingSummaries = data.some(session => !session.summary);
       // Refetch every 5 seconds if there are pending summaries, otherwise stop polling
       return hasPendingSummaries ? 5000 : false;
     },
