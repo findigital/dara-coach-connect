@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dara <noreply@yourdomain.com>",
+        from: "onboarding@resend.dev",
         to: [emailRequest.userEmail],
         subject: "Your Session with Dara is Scheduled!",
         html: emailContent,
