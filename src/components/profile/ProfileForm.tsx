@@ -185,7 +185,11 @@ const ProfileForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
+        >
           {isLoading ? "Saving..." : "Save Changes"}
         </Button>
       </form>
