@@ -6,12 +6,33 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [sessionCount, setSessionCount] = useState(0);
   const [pendingActionItems, setPendingActionItems] = useState(0);
+
+  // Fetch next scheduled session
+  const { data: nextSession } = useQuery({
+    queryKey: ['nextScheduledSession'],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
+      const { data } = await supabase
+        .from('scheduled_sessions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .gte('scheduled_for', new Date().toISOString())
+        .order('scheduled_for', { ascending: true })
+        .limit(1)
+        .single();
+      
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
 
   useEffect(() => {
     const fetchSessionCount = async () => {
@@ -67,6 +88,18 @@ const Index = () => {
     return "Amazing dedication! Keep it up!";
   };
 
+  const formatDateTime = (dateString: string) => {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(new Date(dateString));
+  };
+
   return (
     <div className="min-h-screen bg-white flex">
       <Navigation />
@@ -84,6 +117,7 @@ const Index = () => {
               </div>
               <Button 
                 className="bg-dara-yellow text-dara-navy hover:bg-dara-navy hover:text-white flex items-center gap-2"
+                onClick={() => navigate('/sessions')}
               >
                 Start Session
                 <span className="ml-2">→</span>
@@ -144,9 +178,17 @@ const Index = () => {
                       <Calendar className="h-6 w-6 text-dara-navy" />
                     </div>
                     <div className="mt-4">
-                      <h2 className="text-xl font-bold mb-2 text-dara-navy">Oct 15, 2024</h2>
-                      <p className="text-gray-600">8:00 PM</p>
-                      <p className="text-gray-600 mt-2">Schedule Session →</p>
+                      {nextSession ? (
+                        <>
+                          <h2 className="text-xl font-bold mb-2 text-dara-navy">Next Session</h2>
+                          <p className="text-gray-600">{formatDateTime(nextSession.scheduled_for)}</p>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-xl font-bold mb-2 text-dara-navy">No Sessions Scheduled</h2>
+                          <p className="text-gray-600">Schedule your next session with Dara →</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Card>
