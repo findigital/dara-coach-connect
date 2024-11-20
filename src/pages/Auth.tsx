@@ -42,8 +42,6 @@ const Auth = () => {
         toast.success("Your profile has been updated successfully!");
       } else if (event === "SIGNED_OUT") {
         toast.info("You have been signed out.");
-      } else if (event === "INVALID_USER_CREDENTIALS") {
-        toast.error("Incorrect email or password. Please try again.");
       }
     });
 
@@ -134,51 +132,6 @@ const Auth = () => {
               }
             }}
             providers={[]}
-            onError={(error) => {
-              if (error.message.includes("Invalid login credentials")) {
-                toast.error("Incorrect email or password. Please try again.");
-              } else {
-                toast.error("An error occurred. Please try again.");
-              }
-            }}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: 'Email',
-                  password_label: 'Password',
-                  button_label: 'Sign in',
-                  loading_button_label: 'Signing in...',
-                  social_provider_text: 'Sign in with {{provider}}',
-                  link_text: 'Already have an account? Sign in',
-                },
-                sign_up: {
-                  email_label: 'Email',
-                  password_label: 'Password',
-                  button_label: 'Sign up',
-                  loading_button_label: 'Signing up...',
-                  social_provider_text: 'Sign up with {{provider}}',
-                  link_text: "Don't have an account? Sign up",
-                },
-                magic_link: {
-                  email_input_label: 'Email address',
-                  button_label: 'Send magic link',
-                  loading_button_label: 'Sending magic link...',
-                  link_text: 'Send a magic link email',
-                },
-                forgotten_password: {
-                  email_label: 'Email',
-                  password_label: 'Password',
-                  button_label: 'Send reset password instructions',
-                  loading_button_label: 'Sending reset instructions...',
-                  link_text: 'Forgot password?',
-                },
-                update_password: {
-                  password_label: 'New password',
-                  button_label: 'Update password',
-                  loading_button_label: 'Updating password...',
-                },
-              },
-            }}
           />
         </div>
       </div>
