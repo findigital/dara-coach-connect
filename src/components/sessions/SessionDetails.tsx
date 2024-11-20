@@ -2,10 +2,12 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, ActionItem } from "@/types/session";
+import { useState } from "react";
 
 interface SessionDetailsProps {
   session: Session;
@@ -20,6 +22,9 @@ export const SessionDetails = ({
   onActionItemToggle,
   onActionItemDelete 
 }: SessionDetailsProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+
   const handleDeleteActionItem = async (actionItemId: string) => {
     try {
       const { error } = await supabase
@@ -34,6 +39,45 @@ export const SessionDetails = ({
     } catch (error) {
       console.error('Error deleting action item:', error);
       toast.error("Failed to delete action item");
+    }
+  };
+
+  const startEditing = (item: ActionItem) => {
+    setEditingId(item.id);
+    setEditContent(item.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const handleEditActionItem = async (actionItemId: string) => {
+    if (!editContent.trim()) {
+      toast.error("Action item cannot be empty");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('action_items')
+        .update({ content: editContent.trim() })
+        .eq('id', actionItemId);
+
+      if (error) throw error;
+
+      // Update local state through parent component
+      const updatedItem = actionItems.map(item => 
+        item.id === actionItemId ? { ...item, content: editContent.trim() } : item
+      );
+      actionItems = updatedItem;
+      
+      setEditingId(null);
+      setEditContent("");
+      toast.success("Action item updated successfully");
+    } catch (error) {
+      console.error('Error updating action item:', error);
+      toast.error("Failed to update action item");
     }
   };
 
@@ -69,22 +113,61 @@ export const SessionDetails = ({
                       onCheckedChange={(checked) => onActionItemToggle(item.id, checked as boolean)}
                       className="mt-1"
                     />
-                    <label
-                      htmlFor={item.id}
-                      className={`text-gray-700 cursor-pointer flex-grow ${
-                        item.completed ? "line-through text-gray-400" : ""
-                      }`}
-                    >
-                      {item.content}
-                    </label>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-1/2 -translate-y-1/2 hover:bg-red-100 hover:text-red-600"
-                      onClick={() => handleDeleteActionItem(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {editingId === item.id ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditActionItem(item.id)}
+                          className="hover:bg-green-100 hover:text-green-600"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={cancelEditing}
+                          className="hover:bg-red-100 hover:text-red-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <label
+                          htmlFor={item.id}
+                          className={`text-gray-700 cursor-pointer flex-grow ${
+                            item.completed ? "line-through text-gray-400" : ""
+                          }`}
+                        >
+                          {item.content}
+                        </label>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-blue-100 hover:text-blue-600"
+                            onClick={() => startEditing(item)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-red-100 hover:text-red-600"
+                            onClick={() => handleDeleteActionItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
