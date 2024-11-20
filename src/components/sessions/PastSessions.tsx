@@ -12,7 +12,7 @@ const PastSessions = () => {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
 
-  const { data: sessions = [], isLoading, refetch } = useQuery({
+  const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ['past-sessions', authSession?.user?.id],
     queryFn: async () => {
       if (!authSession?.user?.id) return [];
@@ -24,59 +24,9 @@ const PastSessions = () => {
         .order('started_at', { ascending: false });
 
       if (error) throw error;
-      
-      // For sessions without summaries, generate them
-      const sessionsToProcess = (data || []).filter(session => !session.summary);
-      if (sessionsToProcess.length > 0) {
-        toast.info("Generating summaries for recent sessions...");
-        await Promise.all(
-          sessionsToProcess.map(session => 
-            generateSessionInsights(session.id, 'summary')
-              .then(() => generateSessionInsights(session.id, 'action_items'))
-          )
-        );
-      }
-      
       return data || [];
-    },
-    refetchInterval: (data) => {
-      if (!data) return false;
-      // Check if any sessions are missing summaries
-      const hasPendingSummaries = data.some(session => !session.summary);
-      // Refetch every 5 seconds if there are pending summaries, otherwise stop polling
-      return hasPendingSummaries ? 5000 : false;
-    },
+    }
   });
-
-  const generateSessionInsights = async (sessionId: string, type: 'title' | 'summary' | 'action_items') => {
-    try {
-      const response = await supabase.functions.invoke('generate-session-insights', {
-        body: { sessionId, type },
-      });
-
-      if (response.error) throw response.error;
-      
-      toast.success(`Generated ${type} successfully`);
-    } catch (error) {
-      console.error(`Error generating ${type}:`, error);
-      toast.error(`Failed to generate ${type}`);
-    }
-  };
-
-  const fetchSessionDetails = async (sessionId: string) => {
-    try {
-      const { data: actionItemsData, error: actionItemsError } = await supabase
-        .from('action_items')
-        .select('id, content, completed')
-        .eq('session_id', sessionId);
-
-      if (actionItemsError) throw actionItemsError;
-      setActionItems(actionItemsData || []);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      toast.error("Failed to load session details");
-    }
-  };
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
@@ -110,6 +60,21 @@ const PastSessions = () => {
     } catch (error) {
       console.error('Error deleting session:', error);
       toast.error("Failed to delete session");
+    }
+  };
+
+  const fetchSessionDetails = async (sessionId: string) => {
+    try {
+      const { data: actionItemsData, error: actionItemsError } = await supabase
+        .from('action_items')
+        .select('id, content, completed')
+        .eq('session_id', sessionId);
+
+      if (actionItemsError) throw actionItemsError;
+      setActionItems(actionItemsData || []);
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      toast.error("Failed to load session details");
     }
   };
 
@@ -152,7 +117,7 @@ const PastSessions = () => {
         <h2 className="text-xl font-semibold text-dara-navy px-2">Past Sessions</h2>
         <div className="grid lg:grid-cols-2 gap-6">
           <SessionList
-            sessions={sessions}
+            sessions={sessions || []}
             selectedSessionId={selectedSession?.id || null}
             onSessionSelect={handleSessionSelect}
             onDeleteSession={handleDeleteSession}

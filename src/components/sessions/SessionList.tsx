@@ -1,7 +1,7 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Trash2 } from "lucide-react";
+import { CalendarDays, Trash2, StickyNote } from "lucide-react";
 import type { Session } from "@/types/session";
 
 interface SessionListProps {
@@ -24,13 +24,17 @@ export const SessionList = ({
         <p className="text-sm text-gray-500">Review your previous coaching sessions</p>
       </CardHeader>
       <ScrollArea className="flex-1 px-4">
-        <div className="space-y-4 pb-4">
-          {sessions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No sessions found</p>
-            </div>
-          ) : (
-            sessions.map((session) => (
+        {sessions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+            <StickyNote className="h-12 w-12 mb-4 text-dara-yellow" />
+            <p className="text-lg font-medium mb-2">No sessions yet</p>
+            <p className="text-sm text-center max-w-[280px]">
+              Your coaching sessions will appear here once you start them.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4 pb-4">
+            {sessions.map((session) => (
               <Card
                 key={session.id}
                 className={`group cursor-pointer transition-all hover:-translate-y-1 duration-200 ${
@@ -63,9 +67,9 @@ export const SessionList = ({
                   </div>
                 </CardHeader>
               </Card>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </ScrollArea>
     </Card>
   );
