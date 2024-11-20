@@ -124,6 +124,27 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          scheduled_for: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          scheduled_for: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          scheduled_for?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       session_notes: {
         Row: {
           content: string

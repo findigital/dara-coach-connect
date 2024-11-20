@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,6 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Tables } from "@/integrations/supabase/types";
+
+type ScheduledSession = Tables<'scheduled_sessions'>;
 
 const Schedule = () => {
   const [date, setDate] = useState<Date>();
@@ -26,13 +29,13 @@ const Schedule = () => {
   const { data: scheduledSessions = [], isLoading } = useQuery({
     queryKey: ['scheduledSessions'],
     queryFn: async () => {
-      const { data: sessions, error } = await supabase
+      const { data, error } = await supabase
         .from('scheduled_sessions')
         .select('*')
         .order('scheduled_for', { ascending: true });
       
       if (error) throw error;
-      return sessions || [];
+      return data as ScheduledSession[];
     }
   });
 
