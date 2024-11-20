@@ -44,9 +44,7 @@ const Schedule = () => {
     mutationFn: async ({ scheduledFor }: { scheduledFor: Date }) => {
       const { data, error } = await supabase
         .from('scheduled_sessions')
-        .insert([
-          { scheduled_for: scheduledFor.toISOString() }
-        ])
+        .insert([{ scheduled_for: scheduledFor.toISOString() }])
         .select()
         .single();
 
@@ -62,7 +60,7 @@ const Schedule = () => {
       setDate(undefined);
       setTime(undefined);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to schedule session. Please try again.",
