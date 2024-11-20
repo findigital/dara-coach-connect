@@ -111,6 +111,7 @@ export type Database = {
           phone_number: string | null
           timezone: string
           updated_at: string
+          zipcode: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -122,6 +123,7 @@ export type Database = {
           phone_number?: string | null
           timezone?: string
           updated_at?: string
+          zipcode?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -133,6 +135,7 @@ export type Database = {
           phone_number?: string | null
           timezone?: string
           updated_at?: string
+          zipcode?: string | null
         }
         Relationships: []
       }

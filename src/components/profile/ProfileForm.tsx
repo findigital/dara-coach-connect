@@ -28,6 +28,7 @@ const profileFormSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   timezone: z.string().min(1, "Timezone is required"),
+  zipcode: z.string().min(5, "Zipcode must be at least 5 digits"),
 });
 
 const TIMEZONES = [
@@ -57,6 +58,7 @@ const ProfileForm = () => {
       lastName: "",
       phoneNumber: "",
       timezone: "UTC",
+      zipcode: "",
     },
   });
 
@@ -71,7 +73,7 @@ const ProfileForm = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, last_name, phone_number, timezone")
+        .select("first_name, last_name, phone_number, timezone, zipcode")
         .eq("id", user.id)
         .single();
 
@@ -81,6 +83,7 @@ const ProfileForm = () => {
           lastName: profile.last_name || "",
           phoneNumber: profile.phone_number || "",
           timezone: profile.timezone || "UTC",
+          zipcode: profile.zipcode || "",
         });
       }
     };
@@ -105,6 +108,7 @@ const ProfileForm = () => {
           last_name: values.lastName,
           phone_number: values.phoneNumber,
           timezone: values.timezone,
+          zipcode: values.zipcode,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -156,6 +160,19 @@ const ProfileForm = () => {
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <Input placeholder="Enter your phone number" type="tel" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="zipcode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Zipcode</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter your zipcode" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
