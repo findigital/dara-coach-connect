@@ -57,18 +57,28 @@ const Schedule = () => {
         .single();
 
       if (error) throw error;
+
+      // Send confirmation email
+      await supabase.functions.invoke('send-schedule-email', {
+        body: {
+          userId: user.id,
+          scheduledFor: scheduledFor.toISOString(),
+        },
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
       toast({
         title: "Session Scheduled",
-        description: `Your session has been scheduled for ${format(date!, "PPP")} at ${time}`,
+        description: `Your session has been scheduled for ${format(date!, "PPP")} at ${time}. Check your email for confirmation!`,
       });
       setDate(undefined);
       setTime(undefined);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Scheduling error:', error);
       toast({
         title: "Error",
         description: "Failed to schedule session. Please try again.",
