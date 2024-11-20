@@ -172,6 +172,12 @@ const VoiceInteraction = () => {
               <p className="text-gray-500 text-center">
                 Click "Start Session" to begin chatting with Dara
               </p>
+              <Button
+                onClick={startSession}
+                className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
+              >
+                Start Session
+              </Button>
             </div>
           )}
         </CardContent>
