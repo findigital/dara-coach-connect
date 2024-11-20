@@ -4,11 +4,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/AuthProvider";
-import { MessageList } from "./MessageList";
-import { Message } from "./types";
-import { streamChatResponse } from "@/utils/chatUtils";
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 const VoiceInteraction = () => {
   const { session } = useAuth();
@@ -31,6 +34,7 @@ const VoiceInteraction = () => {
       if (error) throw error;
 
       setCurrentSessionId(data.id);
+      // Add the welcome message when session starts
       setMessages([{
         role: 'assistant',
         content: "Hi! I'm Dara, your AI wellness coach. I'm here to listen and support you on your journey. How are you feeling today?"
@@ -72,18 +76,16 @@ const VoiceInteraction = () => {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Add an empty assistant message that will be updated with the stream
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      // Stream the response
-      await streamChatResponse(content, (chunk) => {
-        setMessages(prev => {
-          const newMessages = [...prev];
-          const lastMessage = newMessages[newMessages.length - 1];
-          lastMessage.content += chunk;
-          return newMessages;
-        });
+      // Get AI response
+      const { data, error } = await supabase.functions.invoke('chat-with-dara', {
+        body: { message: content },
       });
+
+      if (error) throw error;
+
+      // Add AI response
+      const aiMessage: Message = { role: 'assistant', content: data.reply };
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error("Failed to send message. Please try again.");
@@ -110,7 +112,29 @@ const VoiceInteraction = () => {
         <CardContent className="flex-1 flex flex-col space-y-4">
           {currentSessionId ? (
             <>
-              <MessageList messages={messages} />
+              {/* Messages Area */}
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-4">
+                  {messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.role === 'user'
+                            ? 'bg-dara-yellow text-dara-navy ml-4'
+                            : 'bg-gray-100 text-gray-800 mr-4'
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              {/* Input Area */}
               <div className="flex items-center gap-2 pt-4">
                 <Button
                   variant="outline"
