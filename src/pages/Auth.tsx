@@ -43,26 +43,87 @@ const Auth = () => {
   }, [navigate, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900 mb-8">dara</h1>
+        <div className="flex flex-col items-center">
+          <h1 className="text-5xl font-bold italic mb-6">dara</h1>
+          <div className="flex items-center space-x-2 mb-12">
+            {[...Array(8)].map((_, i) => (
+              i % 2 === 0 ? (
+                <div key={i} className="w-4 h-4 rounded-full bg-dara-yellow" />
+              ) : (
+                <div key={i} className="text-dara-navy text-2xl font-bold">×</div>
+              )
+            ))}
+          </div>
         </div>
-        <SupabaseAuth 
-          supabaseClient={supabase}
-          appearance={{ 
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#1e293b',
-                  brandAccent: '#334155'
+        <div className="bg-white rounded-3xl shadow-lg p-8">
+          <SupabaseAuth 
+            supabaseClient={supabase}
+            appearance={{ 
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#FFE135',
+                    brandAccent: '#1E3D59',
+                    brandButtonText: "black",
+                  },
+                  radii: {
+                    borderRadiusButton: '9999px',
+                    buttonBorderRadius: '9999px',
+                    inputBorderRadius: '12px',
+                  },
+                  space: {
+                    spaceSmall: '16px',
+                    spaceMedium: '24px',
+                    spaceLarge: '32px',
+                  },
+                  fonts: {
+                    bodyFontFamily: `'Inter', sans-serif`,
+                    buttonFontFamily: `'Inter', sans-serif`,
+                    inputFontFamily: `'Inter', sans-serif`,
+                    labelFontFamily: `'Inter', sans-serif`,
+                  },
+                  fontSizes: {
+                    baseBodySize: '16px',
+                    baseInputSize: '16px',
+                    baseLabelSize: '14px',
+                    baseButtonSize: '16px',
+                  }
                 }
+              },
+              style: {
+                button: {
+                  padding: '12px 24px',
+                  fontWeight: '600',
+                },
+                anchor: {
+                  color: '#1E3D59',
+                  fontWeight: '500',
+                },
+                container: {
+                  gap: '24px',
+                },
+                label: {
+                  color: '#4B5563',
+                  marginBottom: '8px',
+                },
+                input: {
+                  padding: '12px 16px',
+                  backgroundColor: '#F9FAFB',
+                  border: '1px solid #E5E7EB',
+                },
+                message: {
+                  padding: '12px',
+                  marginTop: '8px',
+                  borderRadius: '8px',
+                },
               }
-            }
-          }}
-          providers={[]}
-        />
+            }}
+            providers={[]}
+          />
+        </div>
       </div>
     </div>
   );
