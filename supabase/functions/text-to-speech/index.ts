@@ -15,6 +15,20 @@ interface OpenAIResponse {
   };
 }
 
+// Helper function to convert ArrayBuffer to base64 in chunks
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const uint8Array = new Uint8Array(buffer);
+  const chunks: string[] = [];
+  const chunkSize = 32768; // Process 32KB chunks
+  
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.slice(i, Math.min(i + chunkSize, uint8Array.length));
+    chunks.push(String.fromCharCode.apply(null, chunk));
+  }
+  
+  return btoa(chunks.join(''));
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -61,17 +75,7 @@ serve(async (req) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const chunks: number[] = [];
-    const uint8Array = new Uint8Array(audioBuffer);
-    
-    // Process the array in smaller chunks to avoid stack overflow
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      chunks.push(...Array.from(chunk));
-    }
-    
-    const audioBase64 = btoa(String.fromCharCode(...chunks));
+    const audioBase64 = arrayBufferToBase64(audioBuffer);
     console.log('Successfully generated audio');
     
     return new Response(
@@ -86,7 +90,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 400,
+        status: 500, // Changed from 400 to 500 for server errors
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
