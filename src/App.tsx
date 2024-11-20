@@ -11,6 +11,7 @@ import Schedule from "./pages/Schedule";
 import Wellness from "./pages/Wellness";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/wellness" element={<Wellness />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

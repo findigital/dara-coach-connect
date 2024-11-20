@@ -68,14 +68,18 @@ const Navigation = () => {
 
       <div className="p-4 border-t">
         <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate("/notifications")}
-            className="relative"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
+          <Link to="/notifications">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className={cn(
+                "relative",
+                location.pathname === "/notifications" && "bg-dara-yellow/10 text-dara-navy"
+              )}
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+          </Link>
           <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
             <Settings className="h-5 w-5" />
           </Button>
