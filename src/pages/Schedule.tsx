@@ -25,6 +25,15 @@ const Schedule = () => {
     "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"
   ];
 
+  // Get current user
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    }
+  });
+
   // Fetch scheduled sessions
   const { data: scheduledSessions = [], isLoading } = useQuery({
     queryKey: ['scheduledSessions'],
@@ -36,15 +45,21 @@ const Schedule = () => {
       
       if (error) throw error;
       return data as ScheduledSession[];
-    }
+    },
+    enabled: !!user // Only fetch if user is authenticated
   });
 
   // Schedule new session mutation
   const scheduleMutation = useMutation({
     mutationFn: async ({ scheduledFor }: { scheduledFor: Date }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('scheduled_sessions')
-        .insert([{ scheduled_for: scheduledFor.toISOString() }])
+        .insert({
+          scheduled_for: scheduledFor.toISOString(),
+          user_id: user.id
+        })
         .select()
         .single();
 
