@@ -109,11 +109,11 @@ const VoiceInteraction = () => {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col space-y-4">
+        <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
           {currentSessionId ? (
             <>
               {/* Messages Area */}
-              <ScrollArea className="flex-1 pr-4">
+              <ScrollArea className="flex-1 h-[calc(100vh-300px)] pr-4">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
