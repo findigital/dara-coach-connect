@@ -11,9 +11,15 @@ interface SessionDetailsProps {
   session: Session;
   actionItems: ActionItem[];
   onActionItemToggle: (actionItemId: string, completed: boolean) => void;
+  onActionItemDelete: (actionItemId: string) => void;
 }
 
-export const SessionDetails = ({ session, actionItems, onActionItemToggle }: SessionDetailsProps) => {
+export const SessionDetails = ({ 
+  session, 
+  actionItems, 
+  onActionItemToggle,
+  onActionItemDelete 
+}: SessionDetailsProps) => {
   const handleDeleteActionItem = async (actionItemId: string) => {
     try {
       const { error } = await supabase
@@ -23,8 +29,7 @@ export const SessionDetails = ({ session, actionItems, onActionItemToggle }: Ses
 
       if (error) throw error;
 
-      // Update local state through parent component
-      const updatedActionItems = actionItems.filter(item => item.id !== actionItemId);
+      onActionItemDelete(actionItemId);
       toast.success("Action item deleted successfully");
     } catch (error) {
       console.error('Error deleting action item:', error);

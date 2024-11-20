@@ -105,6 +105,10 @@ const PastSessions = () => {
     }
   };
 
+  const handleActionItemDelete = (actionItemId: string) => {
+    setActionItems(items => items.filter(item => item.id !== actionItemId));
+  };
+
   const handleSessionSelect = (session: Session) => {
     setSelectedSession(session);
     fetchSessionDetails(session.id);
@@ -121,7 +125,6 @@ const PastSessions = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-4 space-y-4">
-        {/* Removed the redundant heading */}
         <div className="grid lg:grid-cols-2 gap-6">
           <SessionList
             sessions={sessions || []}
@@ -134,6 +137,7 @@ const PastSessions = () => {
               session={selectedSession}
               actionItems={actionItems}
               onActionItemToggle={toggleActionItem}
+              onActionItemDelete={handleActionItemDelete}
             />
           )}
         </div>
