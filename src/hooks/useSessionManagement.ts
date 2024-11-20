@@ -61,9 +61,17 @@ export const useSessionManagement = () => {
       if (error) throw error;
 
       // Generate session insights
-      await supabase.functions.invoke('generate-session-insights', {
-        body: { sessionId: currentSessionId, type: 'title' },
-      });
+      await Promise.all([
+        supabase.functions.invoke('generate-session-insights', {
+          body: { sessionId: currentSessionId, type: 'title' },
+        }),
+        supabase.functions.invoke('generate-session-insights', {
+          body: { sessionId: currentSessionId, type: 'summary' },
+        }),
+        supabase.functions.invoke('generate-session-insights', {
+          body: { sessionId: currentSessionId, type: 'action_items' },
+        }),
+      ]);
 
       setCurrentSessionId(null);
       toast.success("Coaching session ended");

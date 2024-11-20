@@ -1,4 +1,4 @@
 project_id = "bmmkkdrguescudrymcsl"
 
-[functions.text-to-speech]
+[functions.generate-session-insights]
 verify_jwt = false
