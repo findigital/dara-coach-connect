@@ -22,6 +22,11 @@ serve(async (req) => {
       throw new Error('No text provided');
     }
 
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    console.log('Making request to OpenAI TTS API');
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
@@ -42,7 +47,8 @@ serve(async (req) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+    const uint8Array = new Uint8Array(audioBuffer);
+    const audioBase64 = btoa(String.fromCharCode.apply(null, uint8Array));
     
     console.log('Successfully generated audio');
     
