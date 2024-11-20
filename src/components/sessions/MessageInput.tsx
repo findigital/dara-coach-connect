@@ -1,6 +1,7 @@
 import { Mic, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useEffect, useRef } from "react";
 
 interface MessageInputProps {
   input: string;
@@ -19,13 +20,60 @@ const MessageInput = ({
   setIsActive, 
   onSendMessage 
 }: MessageInputProps) => {
+  const recognition = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    // Initialize speech recognition
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition.current = new SpeechRecognition();
+      recognition.current.continuous = true;
+      recognition.current.interimResults = true;
+
+      recognition.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        
+        setInput(transcript);
+      };
+
+      recognition.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsActive(false);
+      };
+    }
+
+    return () => {
+      if (recognition.current) {
+        recognition.current.stop();
+      }
+    };
+  }, [setInput, setIsActive]);
+
+  const toggleMic = () => {
+    if (!recognition.current) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+
+    if (isActive) {
+      recognition.current.stop();
+    } else {
+      setInput(''); // Clear input when starting new recording
+      recognition.current.start();
+    }
+    setIsActive(!isActive);
+  };
+
   return (
     <div className="flex items-center gap-2 pt-4">
       <Button
         variant="outline"
         size="icon"
         className={`${isActive ? 'bg-red-100 hover:bg-red-200' : ''}`}
-        onClick={() => setIsActive(!isActive)}
+        onClick={toggleMic}
       >
         <Mic className={`h-5 w-5 ${isActive ? 'text-red-500' : ''}`} />
       </Button>
