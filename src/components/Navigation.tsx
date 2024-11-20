@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History, LogOut, UserCircle } from "lucide-react";
+import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ const Navigation = () => {
     { path: "/past-sessions", label: "Past Sessions", icon: <History className="h-5 w-5" /> },
     { path: "/schedule", label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
     { path: "/wellness", label: "Wellness", icon: <Compass className="h-5 w-5" /> },
-    { path: "/profile", label: "Profile", icon: <UserCircle className="h-5 w-5" /> },
   ];
 
   const handleLogout = async () => {
@@ -72,7 +71,7 @@ const Navigation = () => {
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
             <Settings className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
