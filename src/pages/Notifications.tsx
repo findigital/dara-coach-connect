@@ -8,7 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
+// Separate components for better organization
 const NotificationCard = ({ 
   icon: Icon, 
   title, 
@@ -57,32 +59,7 @@ const Notifications = () => {
   const { session } = useAuth();
   const queryClient = useQueryClient();
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async ({ type, id }: { type: 'session' | 'scheduled', id: string }) => {
-      const table = type === 'session' ? 'coaching_sessions' : 'scheduled_sessions';
-      const { error } = await supabase
-        .from(table)
-        .update({ is_read: true })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notificationCount'] });
-      toast({
-        title: "Notification marked as read",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Failed to mark notification as read",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return [];
@@ -140,6 +117,31 @@ const Notifications = () => {
     enabled: !!session?.user?.id,
   });
 
+  const markAsReadMutation = useMutation({
+    mutationFn: async ({ type, id }: { type: 'session' | 'scheduled', id: string }) => {
+      const table = type === 'session' ? 'coaching_sessions' : 'scheduled_sessions';
+      const { error } = await supabase
+        .from(table)
+        .update({ is_read: true })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notificationCount'] });
+      toast({
+        title: "Notification marked as read",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navigation />
@@ -167,7 +169,7 @@ const Notifications = () => {
                     </Card>
                   ))}
                 </div>
-              ) : notifications?.length === 0 ? (
+              ) : notifications.length === 0 ? (
                 <Card className="p-8 text-center">
                   <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-600">No notifications yet</h3>
@@ -176,7 +178,7 @@ const Notifications = () => {
                   </p>
                 </Card>
               ) : (
-                notifications?.map((notification) => (
+                notifications.map((notification) => (
                   <NotificationCard
                     key={notification.id}
                     icon={notification.icon}

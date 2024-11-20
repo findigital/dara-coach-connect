@@ -77,6 +77,7 @@ export type Database = {
         Row: {
           ended_at: string | null
           id: string
+          is_read: boolean | null
           started_at: string | null
           summary: string | null
           title: string | null
@@ -85,6 +86,7 @@ export type Database = {
         Insert: {
           ended_at?: string | null
           id?: string
+          is_read?: boolean | null
           started_at?: string | null
           summary?: string | null
           title?: string | null
@@ -93,6 +95,7 @@ export type Database = {
         Update: {
           ended_at?: string | null
           id?: string
+          is_read?: boolean | null
           started_at?: string | null
           summary?: string | null
           title?: string | null
@@ -143,18 +146,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_read: boolean | null
           scheduled_for: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          is_read?: boolean | null
           scheduled_for: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          is_read?: boolean | null
           scheduled_for?: string
           user_id?: string
         }
