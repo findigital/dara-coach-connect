@@ -12,7 +12,7 @@ const PastSessions = () => {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
 
-  const { data: sessions = [], isLoading } = useQuery({
+  const { data: sessions = [], isLoading, refetch } = useQuery({
     queryKey: ['past-sessions', authSession?.user?.id],
     queryFn: async () => {
       if (!authSession?.user?.id) return [];
@@ -39,7 +39,8 @@ const PastSessions = () => {
       
       return data || [];
     },
-    refetchInterval: (data = []) => {
+    refetchInterval: (data) => {
+      if (!data) return false;
       // Check if any sessions are missing summaries
       const hasPendingSummaries = data.some(session => !session.summary);
       // Refetch every 5 seconds if there are pending summaries, otherwise stop polling
@@ -74,6 +75,41 @@ const PastSessions = () => {
     } catch (error) {
       console.error('Error fetching session details:', error);
       toast.error("Failed to load session details");
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      // Delete associated action items first
+      await supabase
+        .from('action_items')
+        .delete()
+        .eq('session_id', sessionId);
+
+      // Delete associated chat messages
+      await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('session_id', sessionId);
+
+      // Finally delete the session
+      const { error } = await supabase
+        .from('coaching_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      if (selectedSession?.id === sessionId) {
+        setSelectedSession(null);
+        setActionItems([]);
+      }
+
+      refetch();
+      toast.success("Session deleted successfully");
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      toast.error("Failed to delete session");
     }
   };
 
@@ -119,6 +155,7 @@ const PastSessions = () => {
             sessions={sessions}
             selectedSessionId={selectedSession?.id || null}
             onSessionSelect={handleSessionSelect}
+            onDeleteSession={handleDeleteSession}
           />
           {selectedSession && (
             <SessionDetails
