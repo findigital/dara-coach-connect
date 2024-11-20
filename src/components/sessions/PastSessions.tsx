@@ -4,28 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { SessionList } from "./SessionList";
 import { SessionDetails } from "./SessionDetails";
+import { useQuery } from "@tanstack/react-query";
 import type { Session, ActionItem } from "@/types/session";
 
 const PastSessions = () => {
   const { session: authSession } = useAuth();
-  const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (authSession?.user?.id) {
-      fetchSessions();
-    }
-  }, [authSession?.user?.id]);
-
-  const fetchSessions = async () => {
-    try {
-      if (!authSession?.user?.id) {
-        console.error('No user ID available');
-        return;
-      }
-
+  const { data: sessions = [], isLoading } = useQuery({
+    queryKey: ['past-sessions', authSession?.user?.id],
+    queryFn: async () => {
+      if (!authSession?.user?.id) return [];
+      
       const { data, error } = await supabase
         .from('coaching_sessions')
         .select('id, title, started_at, summary')
@@ -44,22 +35,30 @@ const PastSessions = () => {
               .then(() => generateSessionInsights(session.id, 'action_items'))
           )
         );
-        // Refresh sessions after generating summaries
-        const { data: updatedData } = await supabase
-          .from('coaching_sessions')
-          .select('id, title, started_at, summary')
-          .eq('user_id', authSession.user.id)
-          .order('started_at', { ascending: false });
-          
-        setSessions(updatedData || []);
-      } else {
-        setSessions(data || []);
       }
-      setLoading(false);
+      
+      return data || [];
+    },
+    refetchInterval: (data) => {
+      // Check if any sessions are missing summaries
+      const hasPendingSummaries = data?.some(session => !session.summary);
+      // Refetch every 5 seconds if there are pending summaries, otherwise stop polling
+      return hasPendingSummaries ? 5000 : false;
+    },
+  });
+
+  const generateSessionInsights = async (sessionId: string, type: 'title' | 'summary' | 'action_items') => {
+    try {
+      const response = await supabase.functions.invoke('generate-session-insights', {
+        body: { sessionId, type },
+      });
+
+      if (response.error) throw response.error;
+      
+      toast.success(`Generated ${type} successfully`);
     } catch (error) {
-      console.error('Error fetching sessions:', error);
-      toast.error("Failed to load sessions");
-      setLoading(false);
+      console.error(`Error generating ${type}:`, error);
+      toast.error(`Failed to generate ${type}`);
     }
   };
 
@@ -75,24 +74,6 @@ const PastSessions = () => {
     } catch (error) {
       console.error('Error fetching session details:', error);
       toast.error("Failed to load session details");
-    }
-  };
-
-  const generateSessionInsights = async (sessionId: string, type: 'title' | 'summary' | 'action_items') => {
-    try {
-      const response = await supabase.functions.invoke('generate-session-insights', {
-        body: { sessionId, type },
-      });
-
-      if (response.error) {
-        console.error(`Error generating ${type}:`, response.error);
-        throw response.error;
-      }
-      
-      toast.success(`Generated ${type} successfully`);
-    } catch (error) {
-      console.error(`Error generating ${type}:`, error);
-      toast.error(`Failed to generate ${type}`);
     }
   };
 
@@ -121,7 +102,7 @@ const PastSessions = () => {
     fetchSessionDetails(session.id);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center">
         <p className="text-gray-500">Loading sessions...</p>
