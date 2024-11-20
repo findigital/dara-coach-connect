@@ -46,7 +46,11 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
-          <h1 className="text-5xl font-bold italic mb-6">dara</h1>
+          <img 
+            src="/lovable-uploads/a79631f1-6aa3-48c0-9452-5c5358ba1d2f.png" 
+            alt="dara logo" 
+            className="h-12 w-auto mb-6"
+          />
           <div className="flex items-center space-x-2 mb-12">
             {[...Array(8)].map((_, i) => (
               i % 2 === 0 ? (
