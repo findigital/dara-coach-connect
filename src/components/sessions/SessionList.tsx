@@ -34,7 +34,6 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
       if (error) throw error;
 
       toast.success("Session deleted successfully");
-      // Refresh the page to update the list
       window.location.reload();
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -53,7 +52,7 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className={`group cursor-pointer transition-all hover:bg-gray-100 ${
+              className={`group relative cursor-pointer transition-all hover:bg-gray-100 ${
                 selectedSessionId === session.id ? 'bg-dara-yellow/10 border-dara-yellow' : ''
               }`}
             >
@@ -73,8 +72,7 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 opacity-100 text-gray-400 hover:text-red-500 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-3 right-3 h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
