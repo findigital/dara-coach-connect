@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import type { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -33,16 +34,23 @@ const Auth = () => {
     handleAuthRedirect();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
         navigate("/dashboard");
-      } else if (event === "USER_DELETED" || event === "SIGNED_OUT") {
+      } else if (event === "SIGNED_OUT") {
         navigate("/auth");
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate, searchParams]);
+
+  const handleAuthError = (error: AuthError) => {
+    const errorMessage = error.message === "Invalid login credentials" 
+      ? "Invalid email or password. Please try again."
+      : error.message || "An error occurred during authentication";
+    toast.error(errorMessage);
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white py-8 px-4 sm:px-6 lg:px-8">
@@ -128,9 +136,7 @@ const Auth = () => {
               }
             }}
             providers={[]}
-            onError={(error) => {
-              toast.error(error.message || "An error occurred during authentication");
-            }}
+            onError={handleAuthError}
           />
         </div>
       </div>
