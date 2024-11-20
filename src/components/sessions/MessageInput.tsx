@@ -23,6 +23,7 @@ const MessageInput = ({
   const recognition = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
+    // Initialize speech recognition
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition.current = new SpeechRecognition();
