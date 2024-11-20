@@ -1,4 +1,4 @@
 project_id = "bmmkkdrguescudrymcsl"
 
-[functions.chat-with-dara]
+[functions.text-to-speech]
 verify_jwt = false
