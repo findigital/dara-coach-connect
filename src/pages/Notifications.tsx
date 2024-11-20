@@ -5,6 +5,7 @@ import { Bell, Calendar, Mail, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import Navigation from "@/components/Navigation";
 
 const NotificationCard = ({ icon: Icon, title, description, timestamp }: {
   icon: any;
@@ -96,52 +97,55 @@ const Notifications = () => {
   });
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-dara-navy">Notifications</h1>
-          <p className="text-gray-600 mt-2">Stay updated with your coaching journey</p>
-        </div>
-        <div className="p-2 bg-dara-yellow/10 rounded-full">
-          <Bell className="h-6 w-6 text-dara-navy" />
-        </div>
-      </div>
-
-      <ScrollArea className="h-[600px] rounded-md">
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-4">
-                <div className="flex items-start space-x-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                </div>
-              </Card>
-            ))}
+    <div className="min-h-screen bg-gray-50 flex">
+      <Navigation />
+      
+      <div className="flex-1 lg:ml-64">
+        <main className="h-screen pt-16 lg:pt-0">
+          <div className="bg-white border-b">
+            <div className="container mx-auto py-4">
+              <h1 className="text-2xl font-semibold text-dara-navy">Notifications</h1>
+            </div>
           </div>
-        ) : notifications?.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600">No notifications yet</h3>
-            <p className="text-gray-500 mt-2">
-              We'll notify you about important updates and reminders here
-            </p>
-          </Card>
-        ) : (
-          notifications?.map((notification) => (
-            <NotificationCard
-              key={notification.id}
-              icon={notification.icon}
-              title={notification.title}
-              description={notification.description}
-              timestamp={notification.timestamp}
-            />
-          ))
-        )}
-      </ScrollArea>
+          <div className="container mx-auto p-6">
+            <ScrollArea className="h-[calc(100vh-12rem)] rounded-md">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="p-4">
+                      <div className="flex items-start space-x-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-[250px]" />
+                          <Skeleton className="h-4 w-[200px]" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : notifications?.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600">No notifications yet</h3>
+                  <p className="text-gray-500 mt-2">
+                    We'll notify you about important updates and reminders here
+                  </p>
+                </Card>
+              ) : (
+                notifications?.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    icon={notification.icon}
+                    title={notification.title}
+                    description={notification.description}
+                    timestamp={notification.timestamp}
+                  />
+                ))
+              )}
+            </ScrollArea>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
