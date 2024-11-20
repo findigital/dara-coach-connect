@@ -36,6 +36,8 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
+      } else if (event === "USER_DELETED" || event === "SIGNED_OUT") {
+        navigate("/auth");
       }
     });
 
@@ -126,6 +128,9 @@ const Auth = () => {
               }
             }}
             providers={[]}
+            onError={(error) => {
+              toast.error(error.message || "An error occurred during authentication");
+            }}
           />
         </div>
       </div>
