@@ -33,8 +33,16 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const { message, conversationHistory } = await req.json();
     console.log('Received message:', message);
+    console.log('Conversation history:', conversationHistory);
+
+    // Construct messages array with system prompt and conversation history
+    const messages = [
+      { role: 'system', content: therapeuticPrompt },
+      ...conversationHistory,
+      { role: 'user', content: message }
+    ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -43,11 +51,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: therapeuticPrompt },
-          { role: 'user', content: message }
-        ],
+        model: 'gpt-4o',
+        messages: messages,
       }),
     });
 

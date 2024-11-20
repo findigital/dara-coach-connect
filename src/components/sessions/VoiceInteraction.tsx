@@ -76,9 +76,18 @@ const VoiceInteraction = () => {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
+      // Convert messages to the format expected by OpenAI
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       // Get AI response
       const { data, error } = await supabase.functions.invoke('chat-with-dara', {
-        body: { message: content },
+        body: { 
+          message: content,
+          conversationHistory: conversationHistory
+        },
       });
 
       if (error) throw error;
