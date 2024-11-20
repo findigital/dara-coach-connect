@@ -12,14 +12,6 @@ interface MessageInputProps {
   onSendMessage: (content: string) => void;
 }
 
-// Define the SpeechRecognition type
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
-
 const MessageInput = ({ 
   input, 
   setInput, 

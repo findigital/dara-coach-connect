@@ -14,7 +14,9 @@ const PastSessions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSessions();
+    if (authSession?.user?.id) {
+      fetchSessions();
+    }
   }, [authSession?.user?.id]);
 
   const fetchSessions = async () => {
@@ -95,6 +97,10 @@ const PastSessions = () => {
     setSelectedSession(session);
     fetchSessionDetails(session.id);
   };
+
+  if (!authSession?.user?.id) {
+    return null; // Don't render anything until we have the user ID
+  }
 
   return (
     <div className="h-full bg-gray-50">
