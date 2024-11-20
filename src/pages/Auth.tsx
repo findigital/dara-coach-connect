@@ -131,7 +131,6 @@ const Auth = () => {
                 }
               }
             }}
-            providers={[]}
           />
         </div>
       </div>
