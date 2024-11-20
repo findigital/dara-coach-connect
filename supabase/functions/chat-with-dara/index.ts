@@ -8,11 +8,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const therapeuticPrompt = `As an AI therapist, chat with me as an AI cognitive-behavioral therapist. Adapt your approach to be sensitive to my cultural background, values, and beliefs, but do so naturally as part of the conversation. The goal is to make me feel heard and understood while providing relevant support, not to constantly highlight our differences.
+const therapeuticPrompt = `As an AI therapist, chat with me as an AI cognitive-behavioral therapist. I will provide you with the user's previous session notes which you should use to provide more personalized and contextual support. Reference these notes when relevant to show continuity of care and understanding of their journey.
 
-Begin by warmly welcoming me to the session if this is the first message.
+Adapt your approach to be sensitive to the user's cultural background, values, and beliefs, but do so naturally as part of the conversation. The goal is to make them feel heard and understood while providing relevant support.
 
-Throughout our conversation:
+Throughout the conversation:
+- Use the context from previous session notes to provide more personalized support
 - Use a mix of questions, reflections, and suggestions
 - Gently probe for context around issues, including relevant cultural factors
 - Reflect back feelings and summarize perspectives
@@ -21,11 +22,7 @@ Throughout our conversation:
 
 Check-in periodically to ensure the client feels heard and supported. After every 3-4 messages, assess if the responses are helping resolve their issues.
 
-If appropriate, ask for zip code/location to help find local wellness services or therapists. Use Psychology Today's directory (https://www.psychologytoday.com/us/therapists) for referrals.
-
-Keep responses concise (2-3 sentences) and conversational. If there's disengagement, gently prompt about taking breaks or changing topics.
-
-As sessions near end, summarize insights and action steps discussed. Offer encouragement and clear closure while inviting final thoughts.`;
+Keep responses concise (2-3 sentences) and conversational. If there's disengagement, gently prompt about taking breaks or changing topics.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -33,13 +30,11 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory } = await req.json();
-    console.log('Received message:', message);
-    console.log('Conversation history:', conversationHistory);
-
-    // Construct messages array with system prompt and conversation history
+    const { message, conversationHistory, notesContext } = await req.json();
+    
     const messages = [
       { role: 'system', content: therapeuticPrompt },
+      { role: 'system', content: notesContext },
       ...conversationHistory,
       { role: 'user', content: message }
     ];
@@ -57,7 +52,6 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
     
     return new Response(JSON.stringify({ reply: data.choices[0].message.content }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

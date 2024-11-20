@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,8 +22,30 @@ const VoiceInteraction = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const fetchUserNotes = async () => {
+    try {
+      const { data: notes, error } = await supabase
+        .from('session_notes')
+        .select('content, created_at')
+        .eq('user_id', session?.user?.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return notes;
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      return [];
+    }
+  };
+
   const startSession = async () => {
     try {
+      const userNotes = await fetchUserNotes();
+      const notesContext = userNotes.length > 0
+        ? "Previous session notes:\n" + userNotes.map(note => `- ${note.content}`).join('\n')
+        : "No previous session notes available.";
+
       const { data, error } = await supabase
         .from('coaching_sessions')
         .insert([{ user_id: session?.user?.id }])
@@ -35,7 +57,7 @@ const VoiceInteraction = () => {
       setCurrentSessionId(data.id);
       const welcomeMessage = {
         role: 'assistant' as const,
-        content: "Hi, I'm Dara, your AI mental health coach. I'm here to support you on your journey to better mental well-being. Feel free to share what's on your mind, ask questions, or discuss any challenges you're facing. How are you feeling today?"
+        content: "Hi, I'm Dara, your AI mental health coach. I've reviewed your previous session notes and I'm here to continue supporting you on your journey. How are you feeling today?"
       };
 
       // Persist welcome message
@@ -135,6 +157,11 @@ const VoiceInteraction = () => {
           content: userMessage.content
         });
 
+      const userNotes = await fetchUserNotes();
+      const notesContext = userNotes.length > 0
+        ? "Previous session notes:\n" + userNotes.map(note => `- ${note.content}`).join('\n')
+        : "No previous session notes available.";
+
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
@@ -143,7 +170,8 @@ const VoiceInteraction = () => {
       const { data, error } = await supabase.functions.invoke('chat-with-dara', {
         body: { 
           message: content,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          notesContext: notesContext
         },
       });
 
