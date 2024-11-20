@@ -42,8 +42,6 @@ const Auth = () => {
         toast.success("Your profile has been updated successfully!");
       } else if (event === "SIGNED_OUT") {
         toast.info("You have been signed out.");
-      } else if (event === "INVALID_USER_CREDENTIALS") {
-        toast.error("Incorrect email or password. Please try again.");
       }
     });
 
@@ -135,11 +133,7 @@ const Auth = () => {
             }}
             providers={[]}
             onError={(error) => {
-              if (error.message.includes("Invalid login credentials")) {
-                toast.error("Incorrect email or password. Please try again.");
-              } else {
-                toast.error("An error occurred. Please try again.");
-              }
+              toast.error(error.message);
             }}
             localization={{
               variables: {
@@ -154,12 +148,10 @@ const Auth = () => {
                 sign_up: {
                   email_label: 'Email',
                   password_label: 'Password',
-                  password_label_confirmation: 'Confirm Password',
                   button_label: 'Sign up',
                   loading_button_label: 'Signing up...',
                   social_provider_text: 'Sign up with {{provider}}',
                   link_text: "Don't have an account? Sign up",
-                  confirmation_text: 'Passwords must match',
                 },
                 magic_link: {
                   email_input_label: 'Email address',
@@ -176,13 +168,13 @@ const Auth = () => {
                 },
                 update_password: {
                   password_label: 'New password',
-                  password_label_confirmation: 'Confirm new password',
                   button_label: 'Update password',
                   loading_button_label: 'Updating password...',
-                  confirmation_text: 'Passwords must match',
                 },
               },
             }}
+            view="sign_in"
+            showLinks={true}
           />
         </div>
       </div>
