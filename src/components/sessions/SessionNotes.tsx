@@ -111,7 +111,12 @@ const SessionNotes = () => {
           <Separator className="my-6" />
           
           <div>
-            <h3 className="text-lg font-medium text-dara-navy mb-4">Session History</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-lg font-medium text-dara-navy">Session History</h3>
+              <span className="text-sm bg-dara-yellow/20 text-dara-navy px-2 py-0.5 rounded-full">
+                {notes.length}
+              </span>
+            </div>
             <ScrollArea className="h-[calc(100vh-26rem)]">
               {notes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-gray-500">
