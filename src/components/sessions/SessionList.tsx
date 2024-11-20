@@ -53,7 +53,7 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className={`cursor-pointer transition-all hover:bg-gray-100 ${
+              className={`group cursor-pointer transition-all hover:bg-gray-100 ${
                 selectedSessionId === session.id ? 'bg-dara-yellow/10 border-dara-yellow' : ''
               }`}
             >
@@ -72,8 +72,9 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="flex items-center justify-center p-2 text-gray-500 hover:text-red-500 transition-colors"
+                        size="icon"
+                        className="h-8 w-8 opacity-100 text-gray-400 hover:text-red-500 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
