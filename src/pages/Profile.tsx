@@ -14,6 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/Navigation";
 
@@ -21,7 +28,24 @@ const profileFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  timezone: z.string().min(1, "Timezone is required"),
 });
+
+const TIMEZONES = [
+  "UTC",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "America/Honolulu",
+  "Europe/London",
+  "Europe/Paris",
+  "Asia/Tokyo",
+  "Asia/Dubai",
+  "Australia/Sydney",
+  "Pacific/Auckland"
+];
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -33,6 +57,7 @@ const Profile = () => {
       firstName: "",
       lastName: "",
       phoneNumber: "",
+      timezone: "UTC",
     },
   });
 
@@ -47,7 +72,7 @@ const Profile = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, last_name, phone_number")
+        .select("first_name, last_name, phone_number, timezone")
         .eq("id", user.id)
         .single();
 
@@ -56,6 +81,7 @@ const Profile = () => {
           firstName: profile.first_name || "",
           lastName: profile.last_name || "",
           phoneNumber: profile.phone_number || "",
+          timezone: profile.timezone || "UTC",
         });
       }
     };
@@ -79,6 +105,7 @@ const Profile = () => {
           first_name: values.firstName,
           last_name: values.lastName,
           phone_number: values.phoneNumber,
+          timezone: values.timezone,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -137,6 +164,30 @@ const Profile = () => {
                       <FormControl>
                         <Input placeholder="Enter your phone number" type="tel" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="timezone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Timezone</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your timezone" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TIMEZONES.map((timezone) => (
+                            <SelectItem key={timezone} value={timezone}>
+                              {timezone}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
