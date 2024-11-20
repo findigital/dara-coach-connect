@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      action_items: {
+        Row: {
+          completed: boolean | null
+          content: string
+          created_at: string
+          id: string
+          session_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          content: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          content?: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
@@ -46,18 +78,24 @@ export type Database = {
           ended_at: string | null
           id: string
           started_at: string | null
+          summary: string | null
+          title: string | null
           user_id: string
         }
         Insert: {
           ended_at?: string | null
           id?: string
           started_at?: string | null
+          summary?: string | null
+          title?: string | null
           user_id: string
         }
         Update: {
           ended_at?: string | null
           id?: string
           started_at?: string | null
+          summary?: string | null
+          title?: string | null
           user_id?: string
         }
         Relationships: []

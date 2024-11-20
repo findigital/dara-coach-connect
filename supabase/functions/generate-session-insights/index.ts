@@ -38,45 +38,39 @@ serve(async (req) => {
         prompt = `Based on this coaching session chat history, generate a concise and descriptive title (max 5 words) that captures the main theme:\n\n${chatHistory}`;
         response = await generateOpenAIResponse(prompt);
         
-        // Update session title
         await supabase
           .from('coaching_sessions')
           .update({ title: response })
           .eq('id', sessionId);
-        
         break;
 
       case 'summary':
         prompt = `Based on this coaching session chat history, provide a concise summary (2-3 sentences) of the key points discussed:\n\n${chatHistory}`;
         response = await generateOpenAIResponse(prompt);
         
-        // Update session summary
         await supabase
           .from('coaching_sessions')
           .update({ summary: response })
           .eq('id', sessionId);
-        
         break;
 
       case 'action_items':
         prompt = `Based on this coaching session chat history, generate 3-5 specific, actionable tasks that the client should complete. Format each task in a clear, concise way:\n\n${chatHistory}`;
         response = await generateOpenAIResponse(prompt);
         
-        // Parse action items and insert them
         const actionItems = response.split('\n').filter(item => item.trim());
         const actionItemsData = actionItems.map(content => ({
           session_id: sessionId,
-          content: content.replace(/^\d+\.\s*/, ''), // Remove leading numbers
+          content: content.replace(/^\d+\.\s*/, ''),
         }));
         
         await supabase
           .from('action_items')
           .insert(actionItemsData);
-        
         break;
     }
 
-    return new Response(JSON.stringify({ success: true, data: response }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
