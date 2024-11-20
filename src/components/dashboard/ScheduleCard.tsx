@@ -1,25 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
-export const ScheduleCard = () => {
-  const { data: nextSession } = useQuery({
-    queryKey: ['nextSession'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('scheduled_sessions')
-        .select('*')
-        .gte('scheduled_for', new Date().toISOString())
-        .order('scheduled_for', { ascending: true })
-        .limit(1);
+interface ScheduleCardProps {
+  nextSession: {
+    scheduled_for: string;
+  } | null;
+}
 
-      if (error) throw error;
-      return data?.[0] || null;
-    }
-  });
-
+export const ScheduleCard = ({ nextSession }: ScheduleCardProps) => {
   const formatDateTime = (dateString: string) => {
     return new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
