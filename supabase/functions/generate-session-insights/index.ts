@@ -41,7 +41,6 @@ serve(async (req) => {
     let prompt = '';
     let updateTable = 'coaching_sessions';
     let updateColumn = '';
-    let updateValue = '';
 
     switch (type) {
       case 'title':
