@@ -23,16 +23,16 @@ const Index = () => {
     queryFn: async () => {
       if (!session?.user?.id) return null;
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('scheduled_sessions')
         .select('*')
         .eq('user_id', session.user.id)
         .gte('scheduled_for', new Date().toISOString())
         .order('scheduled_for', { ascending: true })
-        .limit(1)
-        .single();
+        .limit(1);
       
-      return data;
+      if (error) throw error;
+      return data?.[0] || null;
     },
     enabled: !!session?.user?.id
   });
