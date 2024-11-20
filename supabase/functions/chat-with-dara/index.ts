@@ -17,15 +17,7 @@ Throughout our conversation:
 - Gently probe for context around issues, including relevant cultural factors
 - Reflect back feelings and summarize perspectives
 - Offer insights that take cultural lens into account
-- Suggest coping strategies aligned with values and preferences
-
-Check-in periodically to ensure the client feels heard and supported. After every 3-4 messages, assess if the responses are helping resolve their issues.
-
-If appropriate, ask for zip code/location to help find local wellness services or therapists. Use Psychology Today's directory (https://www.psychologytoday.com/us/therapists) for referrals.
-
-Keep responses concise (2-3 sentences) and conversational. If there's disengagement, gently prompt about taking breaks or changing topics.
-
-As sessions near end, summarize insights and action steps discussed. Offer encouragement and clear closure while inviting final thoughts.`;
+- Suggest coping strategies aligned with values and preferences`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -47,14 +39,17 @@ serve(async (req) => {
           { role: 'system', content: therapeuticPrompt },
           { role: 'user', content: message }
         ],
+        stream: true,
       }),
     });
 
-    const data = await response.json();
-    console.log('OpenAI response:', data);
-    
-    return new Response(JSON.stringify({ reply: data.choices[0].message.content }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(response.body, {
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
   } catch (error) {
     console.error('Error in chat-with-dara function:', error);

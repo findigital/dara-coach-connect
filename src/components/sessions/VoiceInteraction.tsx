@@ -20,6 +20,7 @@ const VoiceInteraction = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentStreamingMessage, setCurrentStreamingMessage] = useState('');
 
   const startSession = async () => {
     try {
@@ -34,7 +35,6 @@ const VoiceInteraction = () => {
       if (error) throw error;
 
       setCurrentSessionId(data.id);
-      // Add the welcome message when session starts
       setMessages([{
         role: 'assistant',
         content: "Hi! I'm Dara, your AI wellness coach. I'm here to listen and support you on your journey. How are you feeling today?"
@@ -76,21 +76,58 @@ const VoiceInteraction = () => {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Get AI response
-      const { data, error } = await supabase.functions.invoke('chat-with-dara', {
+      // Add an empty assistant message that will be updated with the stream
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setCurrentStreamingMessage('');
+
+      // Get AI response as a stream
+      const response = await supabase.functions.invoke('chat-with-dara', {
         body: { message: content },
+        responseType: 'stream',
       });
 
-      if (error) throw error;
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      // Add AI response
-      const aiMessage: Message = { role: 'assistant', content: data.reply };
-      setMessages(prev => [...prev, aiMessage]);
+      if (!reader) throw new Error('No response stream available');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices[0]?.delta?.content || '';
+              if (content) {
+                setCurrentStreamingMessage(prev => prev + content);
+                // Update the last message with the new content
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  newMessages[newMessages.length - 1].content = 
+                    newMessages[newMessages.length - 1].content + content;
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing SSE message:', e);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setIsLoading(false);
+      setCurrentStreamingMessage('');
     }
   };
 
@@ -112,7 +149,6 @@ const VoiceInteraction = () => {
         <CardContent className="flex-1 flex flex-col space-y-4">
           {currentSessionId ? (
             <>
-              {/* Messages Area */}
               <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
@@ -134,7 +170,6 @@ const VoiceInteraction = () => {
                 </div>
               </ScrollArea>
 
-              {/* Input Area */}
               <div className="flex items-center gap-2 pt-4">
                 <Button
                   variant="outline"
