@@ -10,8 +10,8 @@ const corsHeaders = {
 
 // Input data
 interface EmailRequest {
-  userEmail: string; // User's email address
-  scheduledFor: string; // Scheduled date and time
+  userEmail: string;
+  scheduledFor: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,15 +24,15 @@ const handler = async (req: Request): Promise<Response> => {
     const emailRequest: EmailRequest = await req.json();
     const emailContent = `
       <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
-        <img src="https://your-dara-logo-url.com/logo.png" alt="Dara Logo" style="width: 150px;"/>
         <h2 style="color: #4A90E2;">Session Scheduled!</h2>
         <p style="font-size: 16px;">Dear User,</p>
         <p style="font-size: 16px;">Your session with Dara has been successfully scheduled for <strong>${emailRequest.scheduledFor}</strong>.</p>
         <p style="font-size: 16px;">We encourage you to prepare for your session and look forward to seeing you!</p>
-        <a href="https://your-website.com" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visit Dara</a>
       </div>
     `;
 
+    console.log("Sending email to:", emailRequest.userEmail);
+    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "onboarding@resend.dev",
-        to: [emailRequest.userEmail],
+        to: emailRequest.userEmail,
         subject: "Your Session with Dara is Scheduled!",
         html: emailContent,
       }),
@@ -58,6 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     } else {
       const error = await res.text();
+      console.error("Resend API error:", error);
       return new Response(JSON.stringify({ error }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
