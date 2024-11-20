@@ -5,10 +5,31 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ['notificationCount'],
+    queryFn: async () => {
+      const [{ count: unreadSessions }, { count: unreadScheduled }] = await Promise.all([
+        supabase
+          .from('coaching_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false),
+        supabase
+          .from('scheduled_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false)
+      ]);
+      
+      return (unreadSessions || 0) + (unreadScheduled || 0);
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
   
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -78,6 +99,14 @@ const Navigation = () => {
               )}
             >
               <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {notificationCount}
+                </Badge>
+              )}
             </Button>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
