@@ -81,7 +81,7 @@ const MessageInput = ({
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Type your message..."
-        className="flex-1"
+        className="flex-1 h-16 py-2"
         onKeyPress={(e) => {
           if (e.key === 'Enter' && !isLoading) {
             onSendMessage(input);
