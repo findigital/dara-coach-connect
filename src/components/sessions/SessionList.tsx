@@ -12,7 +12,7 @@ interface SessionListProps {
 }
 
 export const SessionList = ({ 
-  sessions, 
+  sessions = [], // Provide default empty array
   selectedSessionId, 
   onSessionSelect,
   onDeleteSession 
@@ -37,7 +37,7 @@ export const SessionList = ({
             {sessions.map((session) => (
               <Card
                 key={session.id}
-                className={`group cursor-pointer transition-all hover:-translate-y-1 duration-200 ${
+                className={`relative group cursor-pointer transition-all hover:-translate-y-1 duration-200 ${
                   selectedSessionId === session.id ? 'bg-dara-yellow/10 border-dara-yellow' : ''
                 }`}
                 onClick={() => onSessionSelect(session)}
@@ -56,7 +56,7 @@ export const SessionList = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-1/2 -translate-y-1/2 hover:bg-red-100 hover:text-red-600"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteSession(session.id);
