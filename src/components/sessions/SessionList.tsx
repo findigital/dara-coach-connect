@@ -1,7 +1,7 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Trash2, StickyNote } from "lucide-react";
+import { CalendarDays, Trash2, History } from "lucide-react";
 import type { Session } from "@/types/session";
 
 interface SessionListProps {
@@ -12,7 +12,7 @@ interface SessionListProps {
 }
 
 export const SessionList = ({ 
-  sessions = [], // Provide default empty array
+  sessions = [], 
   selectedSessionId, 
   onSessionSelect,
   onDeleteSession 
@@ -25,12 +25,23 @@ export const SessionList = ({
       </CardHeader>
       <ScrollArea className="flex-1 px-4">
         {sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-            <StickyNote className="h-12 w-12 mb-4 text-dara-yellow" />
-            <p className="text-lg font-medium mb-2">No sessions yet</p>
-            <p className="text-sm text-center max-w-[280px]">
-              Your coaching sessions will appear here once you start them.
+          <div className="flex flex-col items-center justify-center h-[400px] text-center px-4">
+            <div className="bg-dara-yellow/10 p-4 rounded-full mb-4">
+              <History className="h-10 w-10 text-dara-yellow" />
+            </div>
+            <h4 className="text-lg font-semibold text-dara-navy mb-2">
+              No Sessions Yet
+            </h4>
+            <p className="text-gray-500 max-w-[280px] mb-6">
+              Start a new coaching session to track your progress and review insights from your conversations with Dara.
             </p>
+            <Button
+              variant="outline"
+              className="border-dara-yellow text-dara-navy hover:bg-dara-yellow/10"
+              onClick={() => window.location.href = '/sessions'}
+            >
+              Start New Session
+            </Button>
           </div>
         ) : (
           <div className="space-y-4 pb-4">
