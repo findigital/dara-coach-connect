@@ -39,7 +39,7 @@ const Notifications = () => {
         .from('coaching_sessions')
         .select('*')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
+        .order('started_at', { ascending: false })
         .limit(5);
 
       // Fetch scheduled sessions for reminder notifications
