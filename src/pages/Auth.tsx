@@ -33,11 +33,9 @@ const Auth = () => {
     handleAuthRedirect();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
-      } else if (event === "SIGNED_OUT") {
-        navigate("/auth");
       }
     });
 
