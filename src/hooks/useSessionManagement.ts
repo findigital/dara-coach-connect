@@ -60,6 +60,11 @@ export const useSessionManagement = () => {
 
       if (error) throw error;
 
+      // Generate session insights
+      await supabase.functions.invoke('generate-session-insights', {
+        body: { sessionId: currentSessionId, type: 'title' },
+      });
+
       setCurrentSessionId(null);
       toast.success("Coaching session ended");
     } catch (error) {
