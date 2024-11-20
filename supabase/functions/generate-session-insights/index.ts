@@ -43,7 +43,12 @@ serve(async (req) => {
         updateColumn = 'summary';
         break;
       case 'action_items':
-        prompt = `Based on this coaching session chat history, generate exactly 3 specific, actionable, and non-repetitive tasks that the client should complete. Each task should be unique and focused on a different aspect of improvement. Format each task in a clear, concise way:\n\n${chatHistory}`;
+        prompt = `Based on this coaching session chat history, generate exactly 3 brief and specific action items. Each item should be:
+- Under 15 words
+- Start with an action verb
+- Focus on a different improvement area
+- Be clear and direct
+Do not include any markdown, numbers, or special formatting:\n\n${chatHistory}`;
         updateTable = 'action_items';
         break;
       default:
@@ -57,14 +62,14 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           { 
             role: 'system', 
             content: type === 'title' 
               ? 'You are a professional coach helping to analyze coaching sessions. Generate titles without any quotation marks.' 
               : type === 'action_items'
-                ? 'You are a professional coach helping to create focused, non-repetitive action items. Always generate exactly 3 unique and specific tasks.'
+                ? 'You are a professional coach helping to create focused action items. Generate exactly 3 concise, actionable tasks without any formatting or markup.'
                 : 'You are a professional coach helping to analyze coaching sessions.'
           },
           { role: 'user', content: prompt }
@@ -78,7 +83,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const generatedContent = data.choices[0].message.content.trim().replace(/["']/g, '');
+    const generatedContent = data.choices[0].message.content.trim();
 
     if (type === 'action_items') {
       const actionItems = generatedContent.split('\n')
@@ -86,7 +91,10 @@ serve(async (req) => {
         .filter(item => item.length > 0)
         .map(content => ({
           session_id: sessionId,
-          content: content.replace(/^\d+\.\s*/, ''),
+          content: content
+            .replace(/^[-*•\d]+\.\s*/, '') // Remove bullets, numbers and dots
+            .replace(/^\s*-\s*/, '') // Remove leading dashes
+            .replace(/[*_~`]|(\[|\])/g, ''), // Remove markdown formatting
           completed: false,
         }));
 
@@ -98,7 +106,7 @@ serve(async (req) => {
     } else {
       const { error: updateError } = await supabase
         .from(updateTable)
-        .update({ [updateColumn]: generatedContent })
+        .update({ [updateColumn]: generatedContent.replace(/[*_~`]|(\[|\])/g, '') })
         .eq('id', sessionId);
 
       if (updateError) throw updateError;
