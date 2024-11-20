@@ -11,14 +11,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Input data
 interface EmailRequest {
   userEmail: string;
   scheduledFor: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,6 +25,28 @@ const handler = async (req: Request): Promise<Response> => {
     const emailRequest: EmailRequest = await req.json();
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
+    // Get user's profile to access their timezone
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', (await supabase.auth.admin.getUserById(emailRequest.userEmail)).data.user?.id)
+      .single();
+
+    const userTimezone = userProfile?.timezone || 'UTC';
+    
+    // Convert UTC time to user's timezone
+    const scheduledDate = new Date(emailRequest.scheduledFor);
+    const formattedDate = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: userTimezone,
+    }).format(scheduledDate);
+
     // Fetch the user's latest session details
     const { data: latestSession } = await supabase
       .from('coaching_sessions')
@@ -40,26 +60,12 @@ const handler = async (req: Request): Promise<Response> => {
       .limit(1)
       .single();
 
-    const scheduledDate = new Date(emailRequest.scheduledFor);
-    const formattedDate = scheduledDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    
-    const formattedTime = scheduledDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #1a365d; margin-bottom: 10px;">Your Session is Scheduled!</h1>
           <p style="color: #4a5568; font-size: 18px; margin-bottom: 20px;">
-            Mark your calendar for ${formattedDate} at ${formattedTime}
+            Mark your calendar for ${formattedDate} (${userTimezone})
           </p>
         </div>
 
