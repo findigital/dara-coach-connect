@@ -14,13 +14,15 @@ interface SessionDetailsProps {
   actionItems: ActionItem[];
   onActionItemToggle: (actionItemId: string, completed: boolean) => void;
   onActionItemDelete: (actionItemId: string) => void;
+  onActionItemEdit: (actionItemId: string, newContent: string) => void;
 }
 
 export const SessionDetails = ({ 
   session, 
   actionItems, 
   onActionItemToggle,
-  onActionItemDelete 
+  onActionItemDelete,
+  onActionItemEdit
 }: SessionDetailsProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -66,12 +68,7 @@ export const SessionDetails = ({
 
       if (error) throw error;
 
-      // Update local state through parent component
-      const updatedItem = actionItems.map(item => 
-        item.id === actionItemId ? { ...item, content: editContent.trim() } : item
-      );
-      actionItems = updatedItem;
-      
+      onActionItemEdit(actionItemId, editContent.trim());
       setEditingId(null);
       setEditContent("");
       toast.success("Action item updated successfully");

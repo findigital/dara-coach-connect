@@ -109,6 +109,14 @@ const PastSessions = () => {
     setActionItems(items => items.filter(item => item.id !== actionItemId));
   };
 
+  const handleActionItemEdit = (actionItemId: string, newContent: string) => {
+    setActionItems(items =>
+      items.map(item =>
+        item.id === actionItemId ? { ...item, content: newContent } : item
+      )
+    );
+  };
+
   const handleSessionSelect = (session: Session) => {
     setSelectedSession(session);
     fetchSessionDetails(session.id);
@@ -138,6 +146,7 @@ const PastSessions = () => {
               actionItems={actionItems}
               onActionItemToggle={toggleActionItem}
               onActionItemDelete={handleActionItemDelete}
+              onActionItemEdit={handleActionItemEdit}
             />
           )}
         </div>
