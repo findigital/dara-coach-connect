@@ -43,7 +43,7 @@ serve(async (req) => {
         updateColumn = 'summary';
         break;
       case 'action_items':
-        prompt = `Based on this coaching session chat history, generate 3-5 specific, actionable tasks that the client should complete. Format each task in a clear, concise way:\n\n${chatHistory}`;
+        prompt = `Based on this coaching session chat history, generate exactly 3 specific, actionable, and non-repetitive tasks that the client should complete. Each task should be unique and focused on a different aspect of improvement. Format each task in a clear, concise way:\n\n${chatHistory}`;
         updateTable = 'action_items';
         break;
       default:
@@ -63,7 +63,9 @@ serve(async (req) => {
             role: 'system', 
             content: type === 'title' 
               ? 'You are a professional coach helping to analyze coaching sessions. Generate titles without any quotation marks.' 
-              : 'You are a professional coach helping to analyze coaching sessions.'
+              : type === 'action_items'
+                ? 'You are a professional coach helping to create focused, non-repetitive action items. Always generate exactly 3 unique and specific tasks.'
+                : 'You are a professional coach helping to analyze coaching sessions.'
           },
           { role: 'user', content: prompt }
         ],
