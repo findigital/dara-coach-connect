@@ -79,8 +79,8 @@ export const SessionDetails = ({
   };
 
   return (
-    <Card className="lg:h-[calc(100vh-8rem)] flex flex-col">
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-dara-navy">{session.title}</h3>
           <span className="text-sm text-gray-500">
@@ -88,8 +88,8 @@ export const SessionDetails = ({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ScrollArea className="h-full pr-4">
+      <CardContent className="flex-1 overflow-hidden flex flex-col">
+        <ScrollArea className="flex-1 pr-4">
           <div className="space-y-6">
             <div>
               <h4 className="font-semibold text-dara-navy mb-2">Summary</h4>
