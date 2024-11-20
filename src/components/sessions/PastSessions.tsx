@@ -14,15 +14,22 @@ const PastSessions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSessions();
+    if (authSession?.user?.id) {
+      fetchSessions();
+    }
   }, [authSession?.user?.id]);
 
   const fetchSessions = async () => {
     try {
+      if (!authSession?.user?.id) {
+        console.error('No user ID available');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('coaching_sessions')
         .select('id, title, started_at, summary')
-        .eq('user_id', authSession?.user?.id)
+        .eq('user_id', authSession.user.id)
         .order('started_at', { ascending: false });
 
       if (error) throw error;
@@ -31,6 +38,7 @@ const PastSessions = () => {
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error("Failed to load sessions");
+      setLoading(false);
     }
   };
 
@@ -65,6 +73,7 @@ const PastSessions = () => {
 
       if (response.error) throw response.error;
       toast.success(`Generated ${type} successfully`);
+      await fetchSessions(); // Refresh the sessions list to show new data
     } catch (error) {
       console.error(`Error generating ${type}:`, error);
       toast.error(`Failed to generate ${type}`);
@@ -95,6 +104,14 @@ const PastSessions = () => {
     setSelectedSession(session);
     fetchSessionDetails(session.id);
   };
+
+  if (loading) {
+    return (
+      <div className="h-full bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Loading sessions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-gray-50">
