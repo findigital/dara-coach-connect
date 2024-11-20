@@ -154,10 +154,12 @@ const Auth = () => {
                 sign_up: {
                   email_label: 'Email',
                   password_label: 'Password',
+                  password_label_confirmation: 'Confirm Password',
                   button_label: 'Sign up',
                   loading_button_label: 'Signing up...',
                   social_provider_text: 'Sign up with {{provider}}',
                   link_text: "Don't have an account? Sign up",
+                  confirmation_text: 'Passwords must match',
                 },
                 magic_link: {
                   email_input_label: 'Email address',
@@ -174,8 +176,10 @@ const Auth = () => {
                 },
                 update_password: {
                   password_label: 'New password',
+                  password_label_confirmation: 'Confirm new password',
                   button_label: 'Update password',
                   loading_button_label: 'Updating password...',
+                  confirmation_text: 'Passwords must match',
                 },
               },
             }}
