@@ -31,8 +31,6 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    console.log("Sending email to verified address:", "finley.marcus@gmail.com");
-    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -40,8 +38,8 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "onboarding@resend.dev",
-        to: "finley.marcus@gmail.com", // Always send to verified email during testing
+        from: "Dara <dara@builtbyfn.com>",
+        to: emailRequest.userEmail,
         subject: "Your Session with Dara is Scheduled!",
         html: emailContent,
       }),
