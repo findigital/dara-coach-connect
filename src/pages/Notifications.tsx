@@ -1,59 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { Bell, Calendar, Mail, FileText } from "lucide-react";
+import { Bell, Calendar, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
+import { NotificationCard } from "@/components/notifications/NotificationCard";
+import { EmptyNotifications } from "@/components/notifications/EmptyNotifications";
 
-// Separate components for better organization
-const NotificationCard = ({ 
-  icon: Icon, 
-  title, 
-  description, 
-  timestamp, 
-  isRead,
-  onMarkAsRead,
-}: {
-  icon: any;
+interface Notification {
+  id: string;
+  type: 'session' | 'scheduled';
+  recordId: string;
+  icon: typeof Bell | typeof Calendar | typeof FileText;
   title: string;
   description: string;
   timestamp: string;
   isRead: boolean;
-  onMarkAsRead: () => void;
-}) => (
-  <Card className={cn(
-    "p-4 mb-4 hover:bg-gray-50 transition-colors cursor-pointer",
-    !isRead && "border-l-4 border-dara-yellow"
-  )}>
-    <div className="flex items-start space-x-4">
-      <div className="p-2 bg-dara-yellow/10 rounded-full">
-        <Icon className="h-5 w-5 text-dara-navy" />
-      </div>
-      <div className="flex-1">
-        <h3 className="font-semibold text-dara-navy">{title}</h3>
-        <p className="text-gray-600 text-sm mt-1">{description}</p>
-        <p className="text-gray-400 text-xs mt-2">{timestamp}</p>
-      </div>
-      {!isRead && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={(e) => {
-            e.stopPropagation();
-            onMarkAsRead();
-          }}
-        >
-          Mark as read
-        </Button>
-      )}
-    </div>
-  </Card>
-);
+}
 
 const Notifications = () => {
   const { session } = useAuth();
@@ -80,19 +46,19 @@ const Notifications = () => {
           .limit(5)
       ]);
 
-      const notifications = [];
+      const notifications: Notification[] = [];
 
       sessions?.forEach(session => {
         if (session.summary) {
           notifications.push({
             id: `summary-${session.id}`,
-            type: 'session' as const,
+            type: 'session',
             recordId: session.id,
             icon: FileText,
             title: 'Session Summary Available',
             description: `Your session summary has been generated and is ready to view.`,
             timestamp: new Date(session.ended_at || session.started_at).toLocaleString(),
-            isRead: session.is_read,
+            isRead: session.is_read || false,
           });
         }
       });
@@ -100,13 +66,13 @@ const Notifications = () => {
       scheduledSessions?.forEach(scheduled => {
         notifications.push({
           id: `reminder-${scheduled.id}`,
-          type: 'scheduled' as const,
+          type: 'scheduled',
           recordId: scheduled.id,
           icon: Calendar,
           title: 'Upcoming Session Reminder',
           description: `You have a session scheduled for ${new Date(scheduled.scheduled_for).toLocaleString()}`,
           timestamp: new Date(scheduled.created_at || '').toLocaleString(),
-          isRead: scheduled.is_read,
+          isRead: scheduled.is_read || false,
         });
       });
 
@@ -170,13 +136,7 @@ const Notifications = () => {
                   ))}
                 </div>
               ) : notifications.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600">No notifications yet</h3>
-                  <p className="text-gray-500 mt-2">
-                    We'll notify you about important updates and reminders here
-                  </p>
-                </Card>
+                <EmptyNotifications />
               ) : (
                 notifications.map((notification) => (
                   <NotificationCard
