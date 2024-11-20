@@ -1,7 +1,7 @@
-import { Mic, Send } from "lucide-react";
+import { Mic, Send, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +20,8 @@ const VoiceInteraction = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const startSession = async () => {
     try {
@@ -34,11 +36,12 @@ const VoiceInteraction = () => {
       if (error) throw error;
 
       setCurrentSessionId(data.id);
-      // Add the welcome message
-      setMessages([{
-        role: 'assistant',
+      const welcomeMessage = {
+        role: 'assistant' as const,
         content: "Hi, I'm Dara, your AI mental health coach. I'm here to support you on your journey to better mental well-being. Feel free to share what's on your mind, ask questions, or discuss any challenges you're facing. How are you feeling today?"
-      }]);
+      };
+      setMessages([welcomeMessage]);
+      playMessage(welcomeMessage.content);
       toast.success("Coaching session started");
     } catch (error) {
       console.error('Error starting session:', error);
@@ -66,23 +69,53 @@ const VoiceInteraction = () => {
     }
   };
 
+  const playMessage = async (text: string) => {
+    try {
+      const response = await supabase.functions.invoke('text-to-speech', {
+        body: { text },
+      });
+
+      if (response.error) throw response.error;
+
+      const blob = new Blob([response.data], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.play();
+        setIsSpeaking(true);
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      toast.error("Failed to play audio");
+    }
+  };
+
+  const toggleSpeech = () => {
+    if (audioRef.current) {
+      if (isSpeaking) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsSpeaking(!isSpeaking);
+    }
+  };
+
   const sendMessage = async (content: string) => {
     if (!content.trim() || !currentSessionId) return;
 
     try {
       setIsLoading(true);
-      // Add user message
       const userMessage: Message = { role: 'user', content };
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Convert messages to the format expected by OpenAI
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      // Get AI response
       const { data, error } = await supabase.functions.invoke('chat-with-dara', {
         body: { 
           message: content,
@@ -92,12 +125,12 @@ const VoiceInteraction = () => {
 
       if (error) throw error;
 
-      // Add AI response
       const aiMessage: Message = { role: 'assistant', content: data.reply };
       setMessages(prev => [...prev, aiMessage]);
+      playMessage(data.reply);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to send message");
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +140,23 @@ const VoiceInteraction = () => {
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
-          <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+            {currentSessionId && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSpeech}
+                className="ml-2"
+              >
+                {isSpeaking ? (
+                  <VolumeX className="h-5 w-5" />
+                ) : (
+                  <Volume2 className="h-5 w-5" />
+                )}
+              </Button>
+            )}
+          </div>
           {currentSessionId && (
             <Button
               onClick={endSession}
@@ -119,9 +168,10 @@ const VoiceInteraction = () => {
           )}
         </CardHeader>
         <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
+          <audio ref={audioRef} onEnded={() => setIsSpeaking(false)} />
+          
           {currentSessionId ? (
             <>
-              {/* Messages Area */}
               <ScrollArea className="flex-1 h-[calc(100vh-300px)] pr-4">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
@@ -143,7 +193,6 @@ const VoiceInteraction = () => {
                 </div>
               </ScrollArea>
 
-              {/* Input Area */}
               <div className="flex items-center gap-2 pt-4">
                 <Button
                   variant="outline"
