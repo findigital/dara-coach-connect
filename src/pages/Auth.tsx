@@ -33,7 +33,7 @@ const Auth = () => {
     handleAuthRedirect();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
       } else if (event === "PASSWORD_RECOVERY") {
@@ -42,6 +42,8 @@ const Auth = () => {
         toast.success("Your profile has been updated successfully!");
       } else if (event === "SIGNED_OUT") {
         toast.info("You have been signed out.");
+      } else if (event === "INVALID_USER_CREDENTIALS") {
+        toast.error("Incorrect email or password. Please try again.");
       }
     });
 
@@ -132,6 +134,13 @@ const Auth = () => {
               }
             }}
             providers={[]}
+            onError={(error) => {
+              if (error.message.includes("Invalid login credentials")) {
+                toast.error("Incorrect email or password. Please try again.");
+              } else {
+                toast.error("An error occurred. Please try again.");
+              }
+            }}
             localization={{
               variables: {
                 sign_in: {
