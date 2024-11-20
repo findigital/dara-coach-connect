@@ -20,7 +20,6 @@ serve(async (req) => {
     const { sessionId, type } = await req.json();
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // Fetch chat messages for the session
     const { data: messages, error: messagesError } = await supabase
       .from('chat_messages')
       .select('role, content')
@@ -36,7 +35,7 @@ serve(async (req) => {
 
     switch (type) {
       case 'title':
-        prompt = `Based on this coaching session chat history, generate a concise and descriptive title (max 5 words) that captures the main theme:\n\n${chatHistory}`;
+        prompt = `Based on this coaching session chat history, generate a concise and descriptive title (max 5 words) that captures the main theme. Do not include any quotation marks in your response:\n\n${chatHistory}`;
         updateColumn = 'title';
         break;
       case 'summary':
@@ -60,7 +59,12 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a professional coach helping to analyze coaching sessions.' },
+          { 
+            role: 'system', 
+            content: type === 'title' 
+              ? 'You are a professional coach helping to analyze coaching sessions. Generate titles without any quotation marks.' 
+              : 'You are a professional coach helping to analyze coaching sessions.'
+          },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
@@ -72,7 +76,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const generatedContent = data.choices[0].message.content.trim();
+    const generatedContent = data.choices[0].message.content.trim().replace(/["']/g, '');
 
     if (type === 'action_items') {
       const actionItems = generatedContent.split('\n')
