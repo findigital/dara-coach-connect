@@ -72,9 +72,8 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-500 hover:text-red-500"
-                        onClick={(e) => e.stopPropagation()}
+                        size="sm"
+                        className="flex items-center justify-center p-2 text-gray-500 hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
