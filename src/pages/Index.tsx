@@ -11,6 +11,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [sessionCount, setSessionCount] = useState(0);
+  const [pendingActionItems, setPendingActionItems] = useState(0);
 
   useEffect(() => {
     const fetchSessionCount = async () => {
@@ -29,7 +30,34 @@ const Index = () => {
       setSessionCount(count || 0);
     };
 
+    const fetchPendingActionItems = async () => {
+      if (!session?.user?.id) return;
+
+      const { data: sessions } = await supabase
+        .from('coaching_sessions')
+        .select('id')
+        .eq('user_id', session.user.id);
+
+      if (!sessions?.length) return;
+
+      const sessionIds = sessions.map(s => s.id);
+      
+      const { count, error } = await supabase
+        .from('action_items')
+        .select('*', { count: 'exact', head: true })
+        .in('session_id', sessionIds)
+        .eq('completed', false);
+
+      if (error) {
+        console.error('Error fetching pending action items:', error);
+        return;
+      }
+
+      setPendingActionItems(count || 0);
+    };
+
     fetchSessionCount();
+    fetchPendingActionItems();
   }, [session?.user?.id]);
 
   const getEncouragingText = (count: number) => {
@@ -84,7 +112,9 @@ const Index = () => {
                       <ClipboardList className="h-6 w-6 text-dara-navy" />
                     </div>
                     <div className="mt-4">
-                      <h2 className="text-3xl font-bold mb-2 text-dara-navy">2 To-dos</h2>
+                      <h2 className="text-3xl font-bold mb-2 text-dara-navy">
+                        {pendingActionItems} {pendingActionItems === 1 ? 'To-do' : 'To-dos'}
+                      </h2>
                       <p className="text-gray-600">Your session notes →</p>
                     </div>
                   </div>
