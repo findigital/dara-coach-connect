@@ -95,14 +95,7 @@ const VoiceInteraction = () => {
       <Card className="h-full bg-white flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
           <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
-          {!currentSessionId ? (
-            <Button
-              onClick={startSession}
-              className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
-            >
-              Start Session
-            </Button>
-          ) : (
+          {currentSessionId && (
             <Button
               onClick={endSession}
               variant="outline"
