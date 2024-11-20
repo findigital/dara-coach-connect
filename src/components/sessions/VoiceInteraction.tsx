@@ -34,7 +34,11 @@ const VoiceInteraction = () => {
       if (error) throw error;
 
       setCurrentSessionId(data.id);
-      setMessages([]);
+      // Add the welcome message when session starts
+      setMessages([{
+        role: 'assistant',
+        content: "Hi! I'm Dara, your AI wellness coach. I'm here to listen and support you on your journey. How are you feeling today?"
+      }]);
       toast.success("Coaching session started");
     } catch (error) {
       console.error('Error starting session:', error);
