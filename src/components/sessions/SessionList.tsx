@@ -52,7 +52,7 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className={`group relative cursor-pointer transition-all hover:bg-gray-100 ${
+              className={`group relative cursor-pointer transition-all hover:-translate-y-1 duration-200 ${
                 selectedSessionId === session.id ? 'bg-dara-yellow/10 border-dara-yellow' : ''
               }`}
             >
@@ -72,7 +72,7 @@ export const SessionList = ({ sessions, selectedSessionId, onSessionSelect }: Se
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-3 right-3 h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
