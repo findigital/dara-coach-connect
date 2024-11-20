@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -27,6 +27,13 @@ const PastSessions = () => {
       return data || [];
     }
   });
+
+  // Auto-select first session when data is loaded
+  useEffect(() => {
+    if (sessions && sessions.length > 0 && !selectedSession) {
+      handleSessionSelect(sessions[0]);
+    }
+  }, [sessions]);
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
