@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import type { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -44,13 +43,6 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate, searchParams]);
-
-  const handleAuthError = (error: AuthError) => {
-    const errorMessage = error.message === "Invalid login credentials" 
-      ? "Invalid email or password. Please try again."
-      : error.message || "An error occurred during authentication";
-    toast.error(errorMessage);
-  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white py-8 px-4 sm:px-6 lg:px-8">
@@ -132,11 +124,10 @@ const Auth = () => {
                   padding: '12px',
                   marginTop: '8px',
                   borderRadius: '8px',
-                },
+                }
               }
             }}
             providers={[]}
-            onError={handleAuthError}
           />
         </div>
       </div>
