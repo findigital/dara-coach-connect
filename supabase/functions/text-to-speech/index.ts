@@ -1,33 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface RequestBody {
-  text: string;
-}
-
-interface OpenAIResponse {
-  error?: {
-    message: string;
-  };
-}
-
-// Helper function to convert ArrayBuffer to base64 in chunks
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const uint8Array = new Uint8Array(buffer);
-  const chunks: string[] = [];
-  const chunkSize = 32768; // Process 32KB chunks
-  
-  for (let i = 0; i < uint8Array.length; i += chunkSize) {
-    const chunk = uint8Array.slice(i, Math.min(i + chunkSize, uint8Array.length));
-    chunks.push(String.fromCharCode.apply(null, chunk));
-  }
-  
-  return btoa(chunks.join(''));
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -41,10 +18,10 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const body: RequestBody = await req.json();
-    console.log('Received text for TTS:', body.text);
+    const { text } = await req.json();
+    console.log('Received text for TTS:', text);
 
-    if (!body.text) {
+    if (!text) {
       return new Response(
         JSON.stringify({ error: 'Text is required' }), 
         { 
@@ -64,18 +41,18 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'tts-1',
         voice: 'alloy',
-        input: body.text,
+        input: text,
       }),
     });
 
     if (!response.ok) {
-      const errorData: OpenAIResponse = await response.json();
+      const errorData = await response.json();
       console.error('OpenAI TTS API error:', errorData);
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const audioBase64 = arrayBufferToBase64(audioBuffer);
+    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
     console.log('Successfully generated audio');
     
     return new Response(
@@ -90,7 +67,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500, // Changed from 400 to 500 for server errors
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
