@@ -43,12 +43,17 @@ serve(async (req) => {
         updateColumn = 'summary';
         break;
       case 'action_items':
-        prompt = `Based on this coaching session chat history, generate exactly 3 brief and specific action items. Each item should be:
+        prompt = `Based on this coaching session chat history, generate 3-5 specific and unique action items. Each action item should be:
+- Clear and actionable
+- Start with a verb
 - Under 15 words
-- Start with an action verb
-- Focus on a different improvement area
-- Be clear and direct
-Do not include any markdown, numbers, or special formatting:\n\n${chatHistory}`;
+- Focus on a different aspect or strategy
+- Be directly related to the discussion
+
+Format your response as a simple list with one action item per line, without numbers or bullet points.
+
+Chat history:
+${chatHistory}`;
         updateTable = 'action_items';
         break;
       default:
@@ -66,11 +71,9 @@ Do not include any markdown, numbers, or special formatting:\n\n${chatHistory}`;
         messages: [
           { 
             role: 'system', 
-            content: type === 'title' 
-              ? 'You are a professional coach helping to analyze coaching sessions. Generate titles without any quotation marks.' 
-              : type === 'action_items'
-                ? 'You are a professional coach helping to create focused action items. Generate exactly 3 concise, actionable tasks without any formatting or markup.'
-                : 'You are a professional coach helping to analyze coaching sessions.'
+            content: type === 'action_items'
+              ? 'You are a professional coach creating focused action items. Generate 3-5 unique, actionable tasks without any formatting or markup.'
+              : 'You are a professional coach helping to analyze coaching sessions.'
           },
           { role: 'user', content: prompt }
         ],
@@ -89,12 +92,13 @@ Do not include any markdown, numbers, or special formatting:\n\n${chatHistory}`;
       const actionItems = generatedContent.split('\n')
         .map(item => item.trim())
         .filter(item => item.length > 0)
+        .slice(0, 5) // Ensure maximum of 5 items
         .map(content => ({
           session_id: sessionId,
           content: content
-            .replace(/^[-*•\d]+\.\s*/, '') // Remove bullets, numbers and dots
-            .replace(/^\s*-\s*/, '') // Remove leading dashes
-            .replace(/[*_~`]|(\[|\])/g, ''), // Remove markdown formatting
+            .replace(/^[-*•\d]+\.\s*/, '')
+            .replace(/^\s*-\s*/, '')
+            .replace(/[*_~`]|(\[|\])/g, ''),
           completed: false,
         }));
 
