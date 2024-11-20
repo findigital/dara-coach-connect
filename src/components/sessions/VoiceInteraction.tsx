@@ -34,7 +34,11 @@ const VoiceInteraction = () => {
       if (error) throw error;
 
       setCurrentSessionId(data.id);
-      setMessages([]);
+      // Add the welcome message when starting a new session
+      setMessages([{
+        role: 'assistant',
+        content: "Hello! I'm Dara, your AI wellness coach. I'm here to support your journey towards better mental health and well-being. How are you feeling today?"
+      }]);
       toast.success("Coaching session started");
     } catch (error) {
       console.error('Error starting session:', error);
@@ -108,7 +112,6 @@ const VoiceInteraction = () => {
         <CardContent className="flex-1 flex flex-col space-y-4">
           {currentSessionId ? (
             <>
-              {/* Messages Area */}
               <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
@@ -130,7 +133,6 @@ const VoiceInteraction = () => {
                 </div>
               </ScrollArea>
 
-              {/* Input Area */}
               <div className="flex items-center gap-2 pt-4">
                 <Button
                   variant="outline"
