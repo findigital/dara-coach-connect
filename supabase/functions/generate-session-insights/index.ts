@@ -39,7 +39,7 @@ serve(async (req) => {
         updateColumn = 'title';
         break;
       case 'summary':
-        prompt = `Based on this coaching session chat history, provide a concise summary (2-3 sentences) of the key points discussed:\n\n${chatHistory}`;
+        prompt = `Based on this coaching session chat history, provide a concise summary (2-3 sentences) of the key points discussed. Use "you" to refer to the person speaking with Dara, and use "Dara" instead of "assistant". Make it personal as if speaking to the person:\n\n${chatHistory}`;
         updateColumn = 'summary';
         break;
       case 'action_items':
@@ -73,7 +73,7 @@ ${chatHistory}`;
             role: 'system', 
             content: type === 'action_items'
               ? 'You are a professional coach creating focused action items. Generate 3-5 unique, actionable tasks without any formatting or markup.'
-              : 'You are a professional coach helping to analyze coaching sessions.'
+              : 'You are a professional coach helping to analyze coaching sessions. Make the language personal and direct.'
           },
           { role: 'user', content: prompt }
         ],
