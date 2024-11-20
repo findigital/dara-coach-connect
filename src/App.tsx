@@ -10,6 +10,7 @@ import PastSessions from "./pages/PastSessions";
 import Schedule from "./pages/Schedule";
 import Wellness from "./pages/Wellness";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/past-sessions" element={<PastSessions />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/wellness" element={<Wellness />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
