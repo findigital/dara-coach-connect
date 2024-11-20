@@ -2,6 +2,7 @@ import { Mic, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef } from "react";
+import type { SpeechRecognition } from "@/types/speech";
 
 interface MessageInputProps {
   input: string;
