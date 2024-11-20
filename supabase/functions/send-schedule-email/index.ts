@@ -10,7 +10,7 @@ const corsHeaders = {
 
 // Input data
 interface EmailRequest {
-  userId: string; // User ID
+  userEmail: string; // User's email address
   scheduledFor: string; // Scheduled date and time
 }
 
@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Dara <noreply@yourdomain.com>",
-        to: [emailRequest.userId],
+        to: [emailRequest.userEmail],
         subject: "Your Session with Dara is Scheduled!",
         html: emailContent,
       }),
@@ -53,6 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
+          ...corsHeaders,
         },
       });
     } else {

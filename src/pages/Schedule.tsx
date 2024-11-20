@@ -45,7 +45,7 @@ const Schedule = () => {
   // Schedule new session mutation
   const scheduleMutation = useMutation({
     mutationFn: async ({ scheduledFor }: { scheduledFor: Date }) => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id || !user?.email) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
         .from('scheduled_sessions')
@@ -58,10 +58,10 @@ const Schedule = () => {
 
       if (error) throw error;
 
-      // Send confirmation email
+      // Send confirmation email with proper email address
       await supabase.functions.invoke('send-schedule-email', {
         body: {
-          userId: user.id,
+          userEmail: user.email,
           scheduledFor: scheduledFor.toISOString(),
         },
       });
