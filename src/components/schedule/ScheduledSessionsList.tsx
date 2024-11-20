@@ -5,6 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { EmptySchedule } from "./EmptySchedule";
 import { Tables } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type ScheduledSession = Tables<'scheduled_sessions'>;
 
@@ -19,6 +21,37 @@ export const ScheduledSessionsList = ({
   isLoading, 
   onDelete 
 }: ScheduledSessionsListProps) => {
+  // Fetch user's timezone from profile
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .single();
+      
+      return data;
+    }
+  });
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: userProfile?.timezone || 'UTC'
+    }).format(date);
+  };
+
   return (
     <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white">
       <CardHeader>
@@ -46,7 +79,8 @@ export const ScheduledSessionsList = ({
                       <div className="flex items-center text-sm text-gray-500">
                         <CalendarIcon className="h-4 w-4 mr-1" />
                         <span>
-                          {format(new Date(session.scheduled_for), "PPP 'at' h:mm a")}
+                          {formatDateTime(session.scheduled_for)}
+                          {userProfile?.timezone && ` (${userProfile.timezone})`}
                         </span>
                       </div>
                     </div>
