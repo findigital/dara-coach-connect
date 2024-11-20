@@ -33,7 +33,28 @@ const PastSessions = () => {
         .order('started_at', { ascending: false });
 
       if (error) throw error;
-      setSessions(data || []);
+      
+      // For sessions without summaries, generate them
+      const sessionsToProcess = (data || []).filter(session => !session.summary);
+      if (sessionsToProcess.length > 0) {
+        toast.info("Generating summaries for recent sessions...");
+        await Promise.all(
+          sessionsToProcess.map(session => 
+            generateSessionInsights(session.id, 'summary')
+              .then(() => generateSessionInsights(session.id, 'action_items'))
+          )
+        );
+        // Refresh sessions after generating summaries
+        const { data: updatedData } = await supabase
+          .from('coaching_sessions')
+          .select('id, title, started_at, summary')
+          .eq('user_id', authSession.user.id)
+          .order('started_at', { ascending: false });
+          
+        setSessions(updatedData || []);
+      } else {
+        setSessions(data || []);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -51,14 +72,6 @@ const PastSessions = () => {
 
       if (actionItemsError) throw actionItemsError;
       setActionItems(actionItemsData || []);
-
-      // If no summary exists, generate one
-      const session = sessions.find(s => s.id === sessionId);
-      if (session && !session.summary) {
-        await generateSessionInsights(sessionId, 'summary');
-        await generateSessionInsights(sessionId, 'action_items');
-        await fetchSessions(); // Refresh sessions to get the new summary
-      }
     } catch (error) {
       console.error('Error fetching session details:', error);
       toast.error("Failed to load session details");
@@ -71,9 +84,12 @@ const PastSessions = () => {
         body: { sessionId, type },
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        console.error(`Error generating ${type}:`, response.error);
+        throw response.error;
+      }
+      
       toast.success(`Generated ${type} successfully`);
-      await fetchSessions(); // Refresh the sessions list to show new data
     } catch (error) {
       console.error(`Error generating ${type}:`, error);
       toast.error(`Failed to generate ${type}`);

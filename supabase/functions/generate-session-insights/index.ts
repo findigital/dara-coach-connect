@@ -27,47 +27,91 @@ serve(async (req) => {
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
 
-    if (messagesError) throw messagesError;
+    if (messagesError) {
+      console.error('Error fetching messages:', messagesError);
+      throw messagesError;
+    }
+
+    if (!messages || messages.length === 0) {
+      console.error('No messages found for session:', sessionId);
+      throw new Error('No messages found for this session');
+    }
 
     const chatHistory = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
     let prompt = '';
-    let response;
+    let updateTable = 'coaching_sessions';
+    let updateColumn = '';
+    let updateValue = '';
 
     switch (type) {
       case 'title':
         prompt = `Based on this coaching session chat history, generate a concise and descriptive title (max 5 words) that captures the main theme:\n\n${chatHistory}`;
-        response = await generateOpenAIResponse(prompt);
-        
-        await supabase
-          .from('coaching_sessions')
-          .update({ title: response })
-          .eq('id', sessionId);
+        updateColumn = 'title';
         break;
 
       case 'summary':
         prompt = `Based on this coaching session chat history, provide a concise summary (2-3 sentences) of the key points discussed:\n\n${chatHistory}`;
-        response = await generateOpenAIResponse(prompt);
-        
-        await supabase
-          .from('coaching_sessions')
-          .update({ summary: response })
-          .eq('id', sessionId);
+        updateColumn = 'summary';
         break;
 
       case 'action_items':
         prompt = `Based on this coaching session chat history, generate 3-5 specific, actionable tasks that the client should complete. Format each task in a clear, concise way:\n\n${chatHistory}`;
-        response = await generateOpenAIResponse(prompt);
-        
-        const actionItems = response.split('\n').filter(item => item.trim());
-        const actionItemsData = actionItems.map(content => ({
+        updateTable = 'action_items';
+        break;
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: 'You are a professional coach helping to analyze coaching sessions.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('OpenAI API error:', await response.text());
+      throw new Error('Failed to generate insights');
+    }
+
+    const data = await response.json();
+    const generatedContent = data.choices[0].message.content.trim();
+
+    if (type === 'action_items') {
+      const actionItems = generatedContent.split('\n')
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
+        .map(content => ({
           session_id: sessionId,
           content: content.replace(/^\d+\.\s*/, ''),
+          completed: false,
         }));
-        
-        await supabase
-          .from('action_items')
-          .insert(actionItemsData);
-        break;
+
+      const { error: insertError } = await supabase
+        .from('action_items')
+        .insert(actionItems);
+
+      if (insertError) {
+        console.error('Error inserting action items:', insertError);
+        throw insertError;
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from(updateTable)
+        .update({ [updateColumn]: generatedContent })
+        .eq('id', sessionId);
+
+      if (updateError) {
+        console.error('Error updating session:', updateError);
+        throw updateError;
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -81,23 +125,3 @@ serve(async (req) => {
     });
   }
 });
-
-async function generateOpenAIResponse(prompt: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'You are a professional coach helping to summarize coaching sessions and create action plans.' },
-        { role: 'user', content: prompt }
-      ],
-    }),
-  });
-
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
-}
