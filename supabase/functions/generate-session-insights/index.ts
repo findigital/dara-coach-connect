@@ -27,17 +27,9 @@ serve(async (req) => {
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
 
-    if (messagesError) {
-      console.error('Error fetching messages:', messagesError);
-      throw messagesError;
-    }
+    if (messagesError) throw messagesError;
 
-    if (!messages || messages.length === 0) {
-      console.error('No messages found for session:', sessionId);
-      throw new Error('No messages found for this session');
-    }
-
-    const chatHistory = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+    const chatHistory = messages?.map(msg => `${msg.role}: ${msg.content}`).join('\n') || '';
     let prompt = '';
     let updateTable = 'coaching_sessions';
     let updateColumn = '';
@@ -47,16 +39,16 @@ serve(async (req) => {
         prompt = `Based on this coaching session chat history, generate a concise and descriptive title (max 5 words) that captures the main theme:\n\n${chatHistory}`;
         updateColumn = 'title';
         break;
-
       case 'summary':
         prompt = `Based on this coaching session chat history, provide a concise summary (2-3 sentences) of the key points discussed:\n\n${chatHistory}`;
         updateColumn = 'summary';
         break;
-
       case 'action_items':
         prompt = `Based on this coaching session chat history, generate 3-5 specific, actionable tasks that the client should complete. Format each task in a clear, concise way:\n\n${chatHistory}`;
         updateTable = 'action_items';
         break;
+      default:
+        throw new Error('Invalid generation type');
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -76,7 +68,6 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      console.error('OpenAI API error:', await response.text());
       throw new Error('Failed to generate insights');
     }
 
@@ -97,20 +88,14 @@ serve(async (req) => {
         .from('action_items')
         .insert(actionItems);
 
-      if (insertError) {
-        console.error('Error inserting action items:', insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
     } else {
       const { error: updateError } = await supabase
         .from(updateTable)
         .update({ [updateColumn]: generatedContent })
         .eq('id', sessionId);
 
-      if (updateError) {
-        console.error('Error updating session:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
     }
 
     return new Response(JSON.stringify({ success: true }), {
