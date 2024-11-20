@@ -168,10 +168,16 @@ const VoiceInteraction = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500">
+            <div className="flex-1 flex items-center justify-center flex-col gap-4">
+              <p className="text-gray-500 text-center">
                 Click "Start Session" to begin chatting with Dara
               </p>
+              <Button
+                onClick={startSession}
+                className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
+              >
+                Start Session
+              </Button>
             </div>
           )}
         </CardContent>
