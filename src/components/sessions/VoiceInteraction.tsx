@@ -43,7 +43,7 @@ const VoiceInteraction = () => {
       setNotesContext(result.notesContext);
       const welcomeMessage = {
         role: 'assistant' as const,
-        content: "Hi, I'm Dara, your AI mental health coach. I've reviewed your previous session notes and I'm here to continue supporting you on your journey. How are you feeling today?"
+        content: result.welcomeMessage
       };
       setMessages([welcomeMessage]);
       playMessage(welcomeMessage.content);

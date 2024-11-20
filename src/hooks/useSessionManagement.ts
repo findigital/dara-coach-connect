@@ -7,29 +7,68 @@ export const useSessionManagement = () => {
   const { session } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  const fetchUserNotes = async () => {
+  const fetchPreviousSessionContext = async () => {
     try {
-      const { data: notes, error } = await supabase
+      // Fetch last session summary and action items
+      const { data: lastSession } = await supabase
+        .from('coaching_sessions')
+        .select(`
+          summary,
+          action_items (
+            content,
+            completed
+          )
+        `)
+        .eq('user_id', session?.user?.id)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Fetch recent notes
+      const { data: notes } = await supabase
         .from('session_notes')
         .select('content, created_at')
         .eq('user_id', session?.user?.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
-      return notes;
+      if (!lastSession && (!notes || notes.length === 0)) {
+        return null;
+      }
+
+      let context = "Previous session context:\n";
+      
+      if (lastSession?.summary) {
+        context += `\nLast session summary:\n${lastSession.summary}\n`;
+      }
+
+      if (lastSession?.action_items && lastSession.action_items.length > 0) {
+        context += "\nAction items from last session:\n";
+        lastSession.action_items.forEach((item: { content: string; completed: boolean }) => {
+          context += `- ${item.content} (${item.completed ? 'Completed' : 'Pending'})\n`;
+        });
+      }
+
+      if (notes && notes.length > 0) {
+        context += "\nRecent session notes:\n";
+        notes.forEach(note => {
+          context += `- ${note.content}\n`;
+        });
+      }
+
+      return context;
     } catch (error) {
-      console.error('Error fetching notes:', error);
-      return [];
+      console.error('Error fetching session context:', error);
+      return null;
     }
   };
 
   const startSession = async () => {
     try {
-      const userNotes = await fetchUserNotes();
-      const notesContext = userNotes.length > 0
-        ? "Previous session notes:\n" + userNotes.map(note => `- ${note.content}`).join('\n')
-        : "No previous session notes available.";
+      const sessionContext = await fetchPreviousSessionContext();
+      const welcomeMessage = sessionContext
+        ? "Hi, I'm Dara, your AI mental health coach. I've reviewed your previous session notes and I'm here to continue supporting you on your journey. How are you feeling today?"
+        : "Hi, I'm Dara, your AI mental health coach. I'm here to support you on your mental health journey. How are you feeling today?";
 
       const { data, error } = await supabase
         .from('coaching_sessions')
@@ -41,7 +80,11 @@ export const useSessionManagement = () => {
 
       setCurrentSessionId(data.id);
       toast.success("Coaching session started");
-      return { sessionId: data.id, notesContext };
+      return { 
+        sessionId: data.id, 
+        notesContext: sessionContext || "No previous session context available.",
+        welcomeMessage
+      };
     } catch (error) {
       console.error('Error starting session:', error);
       toast.error("Failed to start session");
@@ -85,7 +128,6 @@ export const useSessionManagement = () => {
     currentSessionId,
     setCurrentSessionId,
     startSession,
-    endSession,
-    fetchUserNotes
+    endSession
   };
 };
