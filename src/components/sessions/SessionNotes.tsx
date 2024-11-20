@@ -4,42 +4,84 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Save, Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 const SessionNotes = () => {
-  const { toast } = useToast();
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      text: "That was a great point about active listening",
-      timestamp: new Date().toLocaleString()
-    },
-    {
-      id: 2,
-      text: "The importance of body language",
-      timestamp: new Date().toLocaleString()
-    },
-    {
-      id: 3,
-      text: "Key takeaway: Practice daily mindfulness",
-      timestamp: new Date().toLocaleString()
-    }
-  ]);
+  const { session } = useAuth();
+  const [notes, setNotes] = useState<Array<{
+    id: string;
+    content: string;
+    created_at: string;
+  }>>([]);
+  const [newNote, setNewNote] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveNotes = () => {
-    toast({
-      title: "Notes saved",
-      description: "Your session notes have been saved successfully.",
-    });
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadNotes();
+    }
+  }, [session?.user?.id]);
+
+  const loadNotes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('session_notes')
+        .select('*')
+        .eq('user_id', session?.user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotes(data || []);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      toast.error("Failed to load notes");
+    }
   };
 
-  const handleDeleteNote = (id: number) => {
-    setNotes(notes.filter(note => note.id !== id));
-    toast({
-      title: "Note deleted",
-      description: "Your note has been deleted successfully.",
-    });
+  const handleSaveNotes = async () => {
+    if (!newNote.trim() || !session?.user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('session_notes')
+        .insert({
+          user_id: session.user.id,
+          content: newNote.trim()
+        });
+
+      if (error) throw error;
+
+      setNewNote("");
+      await loadNotes();
+      toast.success("Note saved successfully");
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error("Failed to save note");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('session_notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', session?.user?.id);
+
+      if (error) throw error;
+
+      setNotes(notes.filter(note => note.id !== id));
+      toast.success("Note deleted successfully");
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error("Failed to delete note");
+    }
   };
 
   return (
@@ -53,13 +95,16 @@ const SessionNotes = () => {
             <Textarea
               placeholder="Write your notes here..."
               className="min-h-[150px] resize-none focus-visible:ring-dara-yellow"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
             />
             <Button 
               onClick={handleSaveNotes}
               className="w-full bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90 gap-2"
+              disabled={isLoading || !newNote.trim()}
             >
               <Save className="h-4 w-4" />
-              Save Notes
+              {isLoading ? "Saving..." : "Save Notes"}
             </Button>
           </div>
           
@@ -75,10 +120,10 @@ const SessionNotes = () => {
                     className="group hover:-translate-y-1 transition-all duration-200"
                   >
                     <CardContent className="p-4 relative">
-                      <p className="text-gray-800 pr-8">{note.text}</p>
+                      <p className="text-gray-800 pr-8">{note.content}</p>
                       <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                         <Clock className="h-4 w-4" />
-                        <span>{note.timestamp}</span>
+                        <span>{new Date(note.created_at).toLocaleString()}</span>
                       </div>
                       <Button
                         variant="ghost"
