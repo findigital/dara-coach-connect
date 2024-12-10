@@ -13,7 +13,7 @@ interface MessageListProps {
 
 const MessageList = ({ messages }: MessageListProps) => {
   return (
-    <ScrollArea className="flex-1 h-[calc(100vh-300px)] pr-4">
+    <ScrollArea className="flex-1 h-[calc(100vh-400px)] pr-4">
       <div className="space-y-6">
         {messages.map((message, index) => (
           <div
@@ -29,7 +29,7 @@ const MessageList = ({ messages }: MessageListProps) => {
             <div
               className={`max-w-[80%] rounded-lg p-4 ${
                 message.role === 'user'
-                  ? 'bg-dara-yellow text-dara-navy'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-800'
               }`}
             >
