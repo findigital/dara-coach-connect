@@ -43,8 +43,7 @@ const VoiceInteraction = () => {
       setNotesContext(result.notesContext);
       const welcomeMessage = {
         role: 'assistant' as const,
-        content: result.welcomeMessage,
-        isAudioPlaying: true
+        content: result.welcomeMessage
       };
       setMessages([welcomeMessage]);
       playMessage(welcomeMessage.content);
@@ -93,25 +92,8 @@ const VoiceInteraction = () => {
   };
 
   const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return;
-    
-    const newMessage = {
-      role: 'user' as const,
-      content,
-      isAudioPlaying: true
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    setInput('');
-    
     const reply = await sendMessage(content, notesContext);
     if (reply) {
-      const replyMessage = {
-        role: 'assistant' as const,
-        content: reply,
-        isAudioPlaying: true
-      };
-      setMessages(prev => [...prev, replyMessage]);
       playMessage(reply);
     }
   };

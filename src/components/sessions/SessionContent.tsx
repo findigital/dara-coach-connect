@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { Mic } from "lucide-react";
+import { MessageCircle, Mic } from "lucide-react";
 import MessageList from "./MessageList";
-import AudioWaveform from "./AudioWaveform";
+import MessageInput from "./MessageInput";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,6 +12,9 @@ interface Message {
 interface SessionContentProps {
   currentSessionId: string | null;
   messages: Message[];
+  input: string;
+  setInput: (value: string) => void;
+  isLoading: boolean;
   isActive: boolean;
   setIsActive: (value: boolean) => void;
   onSendMessage: (content: string) => void;
@@ -21,42 +24,55 @@ interface SessionContentProps {
 const SessionContent = ({
   currentSessionId,
   messages,
+  input,
+  setInput,
+  isLoading,
   isActive,
   setIsActive,
+  onSendMessage,
   startSession,
 }: SessionContentProps) => {
   if (!currentSessionId) {
     return (
       <CardContent className="flex-1 flex items-center justify-center flex-col gap-8">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-semibold text-dara-navy">Start Voice Session with Dara</h2>
+          <h2 className="text-2xl font-semibold text-dara-navy">Choose Your Conversation Style</h2>
           <p className="text-gray-600 max-w-md">
-            Have a natural voice conversation with your AI mental health coach
+            Select how you'd like to interact with Dara today
           </p>
         </div>
         
-        <div className="flex flex-col items-center gap-8 w-full max-w-md px-4">
-          <div className="relative w-32 h-32">
-            <img 
-              src="/lovable-uploads/60eebc39-8ebf-4f40-9f7b-48f7588e4222.png" 
-              alt="Dara" 
-              className="w-full h-full"
-            />
-          </div>
-          
-          <div className="flex flex-col items-center gap-2">
-            <h3 className="text-xl font-semibold text-dara-navy">Dara</h3>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-gray-600">Available</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
+          <Button
+            onClick={startSession}
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
+            variant="ghost"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <MessageCircle className="w-8 h-8" />
+              <div className="space-y-2 text-center max-w-[200px]">
+                <h3 className="font-semibold">Text Chat</h3>
+                <p className="text-sm text-gray-600 whitespace-normal">
+                  Type your messages and receive written responses from Dara
+                </p>
+              </div>
             </div>
-          </div>
+          </Button>
 
           <Button
             onClick={startSession}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-full"
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
+            variant="ghost"
           >
-            Start a call
+            <div className="flex flex-col items-center gap-4">
+              <Mic className="w-8 h-8" />
+              <div className="space-y-2 text-center max-w-[200px]">
+                <h3 className="font-semibold">Voice Chat</h3>
+                <p className="text-sm text-gray-600 whitespace-normal">
+                  Have a natural voice conversation with Dara in real-time
+                </p>
+              </div>
+            </div>
           </Button>
         </div>
       </CardContent>
@@ -65,32 +81,15 @@ const SessionContent = ({
 
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      <div className="flex-1">
-        <MessageList messages={messages} />
-      </div>
-      
-      <div className="flex flex-col items-center gap-4 py-6">
-        {isActive ? (
-          <>
-            <AudioWaveform isActive={true} size="lg" />
-            <Button
-              onClick={() => setIsActive(false)}
-              variant="destructive"
-              size="lg"
-              className="rounded-full px-8"
-            >
-              End Call
-            </Button>
-          </>
-        ) : (
-          <Button
-            onClick={() => setIsActive(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-16 w-16 rounded-full"
-          >
-            <Mic className="h-8 w-8" />
-          </Button>
-        )}
-      </div>
+      <MessageList messages={messages} />
+      <MessageInput
+        input={input}
+        setInput={setInput}
+        isLoading={isLoading}
+        isActive={isActive}
+        setIsActive={setIsActive}
+        onSendMessage={onSendMessage}
+      />
     </CardContent>
   );
 };

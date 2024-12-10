@@ -1,10 +1,8 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import AudioWaveform from "./AudioWaveform";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  isAudioPlaying?: boolean;
 }
 
 interface MessageListProps {
@@ -13,24 +11,18 @@ interface MessageListProps {
 
 const MessageList = ({ messages }: MessageListProps) => {
   return (
-    <ScrollArea className="flex-1 h-[calc(100vh-400px)] pr-4">
-      <div className="space-y-6">
+    <ScrollArea className="flex-1 h-[calc(100vh-300px)] pr-4">
+      <div className="space-y-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex flex-col gap-2 ${
-              message.role === 'user' ? 'items-end' : 'items-start'
-            }`}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <AudioWaveform 
-              isActive={message.isAudioPlaying || false} 
-              isUser={message.role === 'user'} 
-            />
             <div
-              className={`max-w-[80%] rounded-lg p-4 ${
+              className={`max-w-[80%] rounded-lg p-3 ${
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-dara-yellow text-dara-navy ml-4'
+                  : 'bg-gray-100 text-gray-800 mr-4'
               }`}
             >
               {message.content}
