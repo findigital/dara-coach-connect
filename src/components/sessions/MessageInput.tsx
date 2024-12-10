@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef } from "react";
 import type { SpeechRecognition } from "@/types/speech";
+import AudioWaveform from "./AudioWaveform";
 
 interface MessageInputProps {
   input: string;
@@ -69,33 +70,40 @@ const MessageInput = ({
   };
 
   return (
-    <div className="flex items-center gap-2 pt-4">
-      <Button
-        variant="outline"
-        size="icon"
-        className={`${isActive ? 'bg-red-100 hover:bg-red-200' : ''}`}
-        onClick={toggleMic}
-      >
-        <Mic className={`h-5 w-5 ${isActive ? 'text-red-500' : ''}`} />
-      </Button>
-      <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1 h-16 py-2"
-        onKeyPress={(e) => {
-          if (e.key === 'Enter' && !isLoading) {
-            onSendMessage(input);
-          }
-        }}
-      />
-      <Button
-        onClick={() => onSendMessage(input)}
-        disabled={isLoading || !input.trim()}
-        className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90"
-      >
-        <Send className="h-5 w-5" />
-      </Button>
+    <div className="flex flex-col gap-4 pt-4">
+      {isActive && (
+        <div className="flex justify-center">
+          <AudioWaveform isActive={true} isUser={true} />
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className={`${isActive ? 'bg-red-100 hover:bg-red-200' : ''} h-16 w-16`}
+          onClick={toggleMic}
+        >
+          <Mic className={`h-6 w-6 ${isActive ? 'text-red-500' : ''}`} />
+        </Button>
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 h-16 py-2"
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !isLoading) {
+              onSendMessage(input);
+            }
+          }}
+        />
+        <Button
+          onClick={() => onSendMessage(input)}
+          disabled={isLoading || !input.trim()}
+          className="bg-dara-yellow text-dara-navy hover:bg-dara-yellow/90 h-16 w-16"
+        >
+          <Send className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 };
