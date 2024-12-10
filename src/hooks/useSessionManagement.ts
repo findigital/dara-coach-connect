@@ -10,7 +10,7 @@ export const useSessionManagement = () => {
   const fetchPreviousSessionContext = async () => {
     try {
       // Fetch last session summary and action items
-      const { data: lastSession } = await supabase
+      const { data: sessions, error: sessionsError } = await supabase
         .from('coaching_sessions')
         .select(`
           summary,
@@ -21,17 +21,22 @@ export const useSessionManagement = () => {
         `)
         .eq('user_id', session?.user?.id)
         .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
+
+      if (sessionsError) throw sessionsError;
 
       // Fetch recent notes
-      const { data: notes } = await supabase
+      const { data: notes, error: notesError } = await supabase
         .from('session_notes')
         .select('content, created_at')
         .eq('user_id', session?.user?.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
+      if (notesError) throw notesError;
+
+      const lastSession = sessions?.[0];
+      
       if (!lastSession && (!notes || notes.length === 0)) {
         return null;
       }
