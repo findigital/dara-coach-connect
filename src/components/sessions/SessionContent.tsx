@@ -45,27 +45,31 @@ const SessionContent = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
           <Button
             onClick={startSession}
-            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy"
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
           >
-            <MessageCircle className="w-8 h-8" />
-            <div className="space-y-2 text-center">
-              <h3 className="font-semibold">Text Chat</h3>
-              <p className="text-sm text-gray-600">
-                Type your messages and receive written responses from Dara
-              </p>
+            <div className="flex flex-col items-center gap-4 w-full">
+              <MessageCircle className="w-8 h-8" />
+              <div className="space-y-2 text-center w-full">
+                <h3 className="font-semibold">Text Chat</h3>
+                <p className="text-sm text-gray-600 break-words w-full">
+                  Type your messages and receive written responses from Dara
+                </p>
+              </div>
             </div>
           </Button>
 
           <Button
             onClick={startSession}
-            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy"
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
           >
-            <Mic className="w-8 h-8" />
-            <div className="space-y-2 text-center">
-              <h3 className="font-semibold">Voice Chat</h3>
-              <p className="text-sm text-gray-600">
-                Have a natural voice conversation with Dara in real-time
-              </p>
+            <div className="flex flex-col items-center gap-4 w-full">
+              <Mic className="w-8 h-8" />
+              <div className="space-y-2 text-center w-full">
+                <h3 className="font-semibold">Voice Chat</h3>
+                <p className="text-sm text-gray-600 break-words w-full">
+                  Have a natural voice conversation with Dara in real-time
+                </p>
+              </div>
             </div>
           </Button>
         </div>
