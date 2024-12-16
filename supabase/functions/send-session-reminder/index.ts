@@ -7,10 +7,12 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,18 +24,10 @@ const handler = async (req: Request): Promise<Response> => {
     const fifteenMinutesFromNow = new Date(Date.now() + 15 * 60 * 1000);
     const thirtyMinutesFromNow = new Date(Date.now() + 30 * 60 * 1000);
 
+    // First get the scheduled sessions
     const { data: upcomingSessions, error: sessionsError } = await supabase
       .from('scheduled_sessions')
-      .select(`
-        *,
-        profiles:user_id (
-          email:id (
-            email
-          ),
-          full_name,
-          timezone
-        )
-      `)
+      .select('id, scheduled_for, user_id')
       .gte('scheduled_for', fifteenMinutesFromNow.toISOString())
       .lt('scheduled_for', thirtyMinutesFromNow.toISOString());
 
@@ -49,13 +43,31 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Get user profiles for these sessions
+    const userIds = upcomingSessions.map(session => session.user_id);
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, timezone')
+      .in('id', userIds);
+
+    if (profilesError) {
+      throw profilesError;
+    }
+
+    // Get user emails from auth.users table
+    const { data: users, error: usersError } = await supabase
+      .auth.admin.listUsers();
+
+    if (usersError) {
+      throw usersError;
+    }
+
     const reminderPromises = upcomingSessions.map(async (session) => {
-      const userEmail = session.profiles?.email?.email;
-      const userName = session.profiles?.full_name;
-      const userTimezone = session.profiles?.timezone || 'UTC';
+      const profile = profiles?.find(p => p.id === session.user_id);
+      const user = users.users.find(u => u.id === session.user_id);
       
-      if (!userEmail) {
-        console.error(`No email found for user with session ${session.id}`);
+      if (!user?.email || !profile) {
+        console.error(`No email or profile found for user with session ${session.id}`);
         return;
       }
 
@@ -68,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-        timeZone: userTimezone,
+        timeZone: profile.timezone || 'UTC',
       }).format(sessionDate);
 
       const emailContent = `
@@ -83,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <h2 style="color: #2d3748; margin-bottom: 15px;">Session Details</h2>
             <p style="color: #4a5568; line-height: 1.6;">
-              <strong>Date and Time:</strong> ${formattedDate} (${userTimezone})<br>
+              <strong>Date and Time:</strong> ${formattedDate} (${profile.timezone || 'UTC'})<br>
               <strong>Duration:</strong> 60 minutes<br>
               <strong>Type:</strong> One-on-One Coaching Session
             </p>
@@ -122,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
         },
         body: JSON.stringify({
           from: "Dara <dara@builtbyfn.com>",
-          to: [userEmail],
+          to: [user.email],
           subject: "Your Session with Dara Starts Soon!",
           html: emailContent,
         }),
