@@ -1,17 +1,12 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Settings, Menu, LayoutDashboard, MessageSquare, Calendar, Compass, History, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { NavigationContent } from "./navigation/NavigationContent";
 
 const Navigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['notificationCount'],
     queryFn: async () => {
@@ -30,95 +25,6 @@ const Navigation = () => {
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });
-  
-  const menuItems = [
-    { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { path: "/sessions", label: "Start Session", icon: <MessageSquare className="h-5 w-5" /> },
-    { path: "/past-sessions", label: "Past Sessions", icon: <History className="h-5 w-5" /> },
-    { path: "/schedule", label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
-    { path: "/wellness", label: "Wellness", icon: <Compass className="h-5 w-5" /> },
-  ];
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate("/auth");
-      toast({
-        title: "Logged out successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error logging out",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const NavigationContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-6">
-        <Link to="/" className="flex items-center">
-          <img 
-            src="/lovable-uploads/a79631f1-6aa3-48c0-9452-5c5358ba1d2f.png" 
-            alt="dara logo" 
-            className="h-8 w-auto"
-          />
-        </Link>
-      </div>
-
-      <div className="flex-1 px-4">
-        <div className="space-y-2">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "nav-link flex items-center space-x-3 px-4 py-3 rounded-lg",
-                  isActive && "bg-dara-yellow/10 text-dara-navy border-r-4 border-dara-yellow"
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="p-4 border-t">
-        <div className="flex items-center justify-between">
-          <Link to="/notifications">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className={cn(
-                "relative",
-                location.pathname === "/notifications" && "bg-dara-yellow/10 text-dara-navy"
-              )}
-            >
-              <Bell className="h-5 w-5" />
-              {notificationCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
-                  {notificationCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -139,7 +45,7 @@ const Navigation = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
-              <NavigationContent />
+              <NavigationContent notificationCount={notificationCount} />
             </SheetContent>
           </Sheet>
         </div>
@@ -147,7 +53,7 @@ const Navigation = () => {
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:block fixed left-0 top-0 h-screen w-64 bg-white border-r">
-        <NavigationContent />
+        <NavigationContent notificationCount={notificationCount} />
       </nav>
     </>
   );
