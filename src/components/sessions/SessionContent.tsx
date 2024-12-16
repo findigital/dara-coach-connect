@@ -34,25 +34,25 @@ const SessionContent = ({
 }: SessionContentProps) => {
   if (!currentSessionId) {
     return (
-      <CardContent className="flex-1 flex items-center justify-center flex-col gap-8 p-4 md:p-6">
-        <div className="text-center space-y-4 max-w-md mx-auto">
-          <h2 className="text-xl md:text-2xl font-semibold text-dara-navy">Choose Your Conversation Style</h2>
-          <p className="text-gray-600 text-sm md:text-base px-4">
+      <CardContent className="flex-1 flex items-center justify-center flex-col gap-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-semibold text-dara-navy">Choose Your Conversation Style</h2>
+          <p className="text-gray-600 max-w-md">
             Select how you'd like to interact with Dara today
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full max-w-2xl px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
           <Button
             onClick={startSession}
-            className="flex flex-col items-center gap-4 p-6 md:p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
-            <div className="flex flex-col items-center gap-3 md:gap-4">
-              <MessageCircle className="w-6 h-6 md:w-8 md:h-8" />
-              <div className="space-y-1 md:space-y-2 text-center">
-                <h3 className="font-semibold text-sm md:text-base">Text Chat</h3>
-                <p className="text-xs md:text-sm text-gray-600 max-w-[200px]">
+            <div className="flex flex-col items-center gap-4">
+              <MessageCircle className="w-8 h-8" />
+              <div className="space-y-2 text-center max-w-[200px]">
+                <h3 className="font-semibold">Text Chat</h3>
+                <p className="text-sm text-gray-600 whitespace-normal">
                   Type your messages and receive written responses from Dara
                 </p>
               </div>
@@ -61,14 +61,14 @@ const SessionContent = ({
 
           <Button
             onClick={startSession}
-            className="flex flex-col items-center gap-4 p-6 md:p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
+            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
-            <div className="flex flex-col items-center gap-3 md:gap-4">
-              <Mic className="w-6 h-6 md:w-8 md:h-8" />
-              <div className="space-y-1 md:space-y-2 text-center">
-                <h3 className="font-semibold text-sm md:text-base">Voice Chat</h3>
-                <p className="text-xs md:text-sm text-gray-600 max-w-[200px]">
+            <div className="flex flex-col items-center gap-4">
+              <Mic className="w-8 h-8" />
+              <div className="space-y-2 text-center max-w-[200px]">
+                <h3 className="font-semibold">Voice Chat</h3>
+                <p className="text-sm text-gray-600 whitespace-normal">
                   Have a natural voice conversation with Dara in real-time
                 </p>
               </div>
@@ -80,7 +80,7 @@ const SessionContent = ({
   }
 
   return (
-    <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden p-4 md:p-6">
+    <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
       <MessageList messages={messages} />
       <MessageInput
         input={input}
