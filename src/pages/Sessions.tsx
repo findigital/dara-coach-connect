@@ -9,7 +9,7 @@ const Sessions = () => {
       <Navigation />
       
       <div className="flex-1 lg:ml-64">
-        <main className="h-screen pt-16 lg:pt-0">
+        <main className="min-h-screen pt-16 lg:pt-0">
           <div className="p-4 space-y-4">
             <h2 className="text-xl font-semibold text-dara-navy px-2">Start Session</h2>
           </div>
@@ -27,11 +27,11 @@ const Sessions = () => {
           </div>
 
           {/* Mobile Layout with stacked panels */}
-          <div className="lg:hidden flex flex-col h-[calc(100vh-8rem)] space-y-4 p-4">
-            <div className="flex-1 min-h-[400px] overflow-hidden">
+          <div className="lg:hidden flex flex-col space-y-4 p-4 pb-20">
+            <div className="min-h-[500px] overflow-y-auto bg-white rounded-lg shadow">
               <VoiceInteraction />
             </div>
-            <div className="flex-1 min-h-[400px] overflow-hidden">
+            <div className="min-h-[500px] overflow-y-auto bg-white rounded-lg shadow">
               <SessionNotes />
             </div>
           </div>
