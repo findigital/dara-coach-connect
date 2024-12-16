@@ -12,7 +12,6 @@ const corsHeaders = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -133,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "Dara <dara@builtbyfn.com>",
+          from: "Dara <support@joindara.com>",
           to: [user.email],
           subject: "Your Session with Dara Starts Soon!",
           html: emailContent,

@@ -123,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dara <dara@builtbyfn.com>",
+        from: "Dara <support@joindara.com>",
         to: emailRequest.userEmail,
         subject: "Your Session with Dara is Scheduled!",
         html: emailContent,
