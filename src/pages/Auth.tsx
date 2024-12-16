@@ -70,6 +70,7 @@ const Auth = () => {
         <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200">
           <SupabaseAuth 
             supabaseClient={supabase}
+            providers={[]}
             appearance={{ 
               theme: ThemeSupa,
               variables: {
