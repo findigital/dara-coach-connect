@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { Bell, Calendar, FileText } from "lucide-react";
+import { Bell, Calendar, FileText, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import { toast } from "@/components/ui/use-toast";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
@@ -108,6 +109,64 @@ const Notifications = () => {
     },
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const unreadNotifications = notifications.filter(n => !n.isRead);
+      
+      // Group notifications by type
+      const sessionIds = unreadNotifications
+        .filter(n => n.type === 'session')
+        .map(n => n.recordId);
+      
+      const scheduledIds = unreadNotifications
+        .filter(n => n.type === 'scheduled')
+        .map(n => n.recordId);
+
+      // Update all unread notifications in parallel
+      const promises = [];
+      
+      if (sessionIds.length > 0) {
+        promises.push(
+          supabase
+            .from('coaching_sessions')
+            .update({ is_read: true })
+            .in('id', sessionIds)
+        );
+      }
+      
+      if (scheduledIds.length > 0) {
+        promises.push(
+          supabase
+            .from('scheduled_sessions')
+            .update({ is_read: true })
+            .in('id', scheduledIds)
+        );
+      }
+
+      const results = await Promise.all(promises);
+      const errors = results.filter(r => r.error).map(r => r.error);
+      
+      if (errors.length > 0) {
+        throw new Error('Failed to mark all notifications as read');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notificationCount'] });
+      toast({
+        title: "All notifications marked as read",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to mark all notifications as read",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navigation />
@@ -116,7 +175,21 @@ const Notifications = () => {
         <main className="h-screen pt-16 lg:pt-0">
           <div className="bg-white border-b">
             <div className="container mx-auto py-4">
-              <h1 className="text-2xl font-semibold text-dara-navy">Notifications</h1>
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-semibold text-dara-navy">Notifications</h1>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    disabled={markAllAsReadMutation.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All ({unreadCount})
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           <div className="container mx-auto p-6">
