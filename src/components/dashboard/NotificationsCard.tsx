@@ -8,18 +8,18 @@ export const NotificationsCard = () => {
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['notificationCount'],
     queryFn: async () => {
-      const [{ count: unreadSessions }, { count: unreadScheduled }] = await Promise.all([
+      const [{ data: unreadSessions }, { data: unreadScheduled }] = await Promise.all([
         supabase
           .from('coaching_sessions')
-          .select('*', { count: 'exact', head: true })
+          .select('id')
           .eq('is_read', false),
         supabase
           .from('scheduled_sessions')
-          .select('*', { count: 'exact', head: true })
+          .select('id')
           .eq('is_read', false)
       ]);
       
-      return (unreadSessions || 0) + (unreadScheduled || 0);
+      return (unreadSessions?.length || 0) + (unreadScheduled?.length || 0);
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });
