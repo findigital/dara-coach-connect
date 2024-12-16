@@ -52,6 +52,13 @@ export const ScheduledSessionsList = ({
     }).format(date);
   };
 
+  // Filter out past sessions
+  const upcomingSessions = sessions.filter(session => {
+    const sessionDate = new Date(session.scheduled_for);
+    const now = new Date();
+    return sessionDate > now;
+  });
+
   return (
     <Card className="lg:h-[calc(100vh-8rem)] flex flex-col bg-white">
       <CardHeader>
@@ -63,10 +70,10 @@ export const ScheduledSessionsList = ({
           <div className="space-y-4">
             {isLoading ? (
               <p className="text-center text-gray-500">Loading sessions...</p>
-            ) : sessions.length === 0 ? (
+            ) : upcomingSessions.length === 0 ? (
               <EmptySchedule />
             ) : (
-              sessions.map((session) => (
+              upcomingSessions.map((session) => (
                 <Card 
                   key={session.id} 
                   className="p-4 hover:bg-gray-50 transition-colors group"
