@@ -132,6 +132,9 @@ const Auth = () => {
                 }
               }
             }}
+            magicLink={false}
+            showLinks={false}
+            redirectTo={window.location.origin}
           />
         </div>
       </div>
