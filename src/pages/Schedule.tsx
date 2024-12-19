@@ -6,62 +6,58 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ScheduleForm } from "@/components/schedule/ScheduleForm";
 import { ScheduledSessionsList } from "@/components/schedule/ScheduledSessionsList";
+import { useAuth } from "@/components/AuthProvider";
 
 const Schedule = () => {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { session } = useAuth();
 
   const timeSlots = [
     "9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", 
     "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"
   ];
 
-  // Get current user
-  const { data: user } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    }
-  });
-
-  // Fetch scheduled sessions
+  // Fetch scheduled sessions for the current user only
   const { data: scheduledSessions = [], isLoading } = useQuery({
-    queryKey: ['scheduledSessions'],
+    queryKey: ['scheduledSessions', session?.user?.id],
     queryFn: async () => {
+      if (!session?.user?.id) return [];
+      
       const { data, error } = await supabase
         .from('scheduled_sessions')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('scheduled_for', { ascending: true });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!user
+    enabled: !!session?.user?.id
   });
 
   // Schedule new session mutation
   const scheduleMutation = useMutation({
     mutationFn: async ({ scheduledFor }: { scheduledFor: Date }) => {
-      if (!user?.id || !user?.email) throw new Error('User not authenticated');
+      if (!session?.user?.id || !session?.user?.email) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
         .from('scheduled_sessions')
         .insert({
           scheduled_for: scheduledFor.toISOString(),
-          user_id: user.id
+          user_id: session.user.id
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Send confirmation email with proper email address
+      // Send confirmation email
       await supabase.functions.invoke('send-schedule-email', {
         body: {
-          userEmail: user.email,
+          userEmail: session.user.email,
           scheduledFor: scheduledFor.toISOString(),
         },
       });
@@ -69,7 +65,7 @@ const Schedule = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions', session?.user?.id] });
       toast({
         title: "Session Scheduled",
         description: `Your session has been scheduled for ${format(date!, "PPP")} at ${time}. Check your email for confirmation!`,
@@ -93,12 +89,13 @@ const Schedule = () => {
       const { error } = await supabase
         .from('scheduled_sessions')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', session?.user?.id); // Add user check for extra security
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions', session?.user?.id] });
       toast({
         title: "Session Cancelled",
         description: "Your session has been cancelled successfully.",
