@@ -8,18 +8,36 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
+  console.log('Received request:', req.method, req.url);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight request');
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase configuration is missing');
+    }
+
     const { sessionId, type } = await req.json();
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    console.log('Processing request for session:', sessionId, 'type:', type);
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: messages, error: messagesError } = await supabase
       .from('chat_messages')
@@ -27,7 +45,10 @@ serve(async (req) => {
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
 
-    if (messagesError) throw messagesError;
+    if (messagesError) {
+      console.error('Error fetching messages:', messagesError);
+      throw messagesError;
+    }
 
     const chatHistory = messages?.map(msg => `${msg.role}: ${msg.content}`).join('\n') || '';
     let prompt = '';
@@ -85,8 +106,9 @@ ${chatHistory}`;
     });
 
     if (!response.ok) {
-      console.error('OpenAI API error:', await response.text());
-      throw new Error('Failed to generate insights');
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`Failed to generate insights: ${errorText}`);
     }
 
     const data = await response.json();
@@ -97,7 +119,7 @@ ${chatHistory}`;
       const actionItems = generatedContent.split('\n')
         .map(item => item.trim())
         .filter(item => item.length > 0)
-        .slice(0, 3) // Ensure exactly 3 items
+        .slice(0, 3)
         .map(content => ({
           session_id: sessionId,
           content: content
@@ -113,7 +135,10 @@ ${chatHistory}`;
         .from('action_items')
         .insert(actionItems);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting action items:', insertError);
+        throw insertError;
+      }
     } else {
       console.log('Updating session with content:', generatedContent);
       
@@ -122,7 +147,10 @@ ${chatHistory}`;
         .update({ [updateColumn]: generatedContent.replace(/[*_~`]|(\[|\])/g, '') })
         .eq('id', sessionId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating session:', updateError);
+        throw updateError;
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -130,7 +158,10 @@ ${chatHistory}`;
     });
   } catch (error) {
     console.error('Error in generate-session-insights:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
