@@ -3,6 +3,7 @@ import { CardContent } from "@/components/ui/card";
 import { MessageCircle, Mic } from "lucide-react";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import CircleWaveform, { ShineCard } from "./CircleWaveform";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -32,6 +33,8 @@ const SessionContent = ({
   onSendMessage,
   startSession,
 }: SessionContentProps) => {
+  const [mode, setMode] = useState<'text' | 'voice'>('text');
+
   if (!currentSessionId) {
     return (
       <CardContent className="flex-1 flex items-center justify-center flex-col gap-8">
@@ -44,7 +47,10 @@ const SessionContent = ({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
           <Button
-            onClick={startSession}
+            onClick={() => {
+              setMode('text');
+              startSession();
+            }}
             className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
@@ -60,7 +66,10 @@ const SessionContent = ({
           </Button>
 
           <Button
-            onClick={startSession}
+            onClick={() => {
+              setMode('voice');
+              startSession();
+            }}
             className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
@@ -81,15 +90,25 @@ const SessionContent = ({
 
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      <MessageList messages={messages} />
-      <MessageInput
-        input={input}
-        setInput={setInput}
-        isLoading={isLoading}
-        isActive={isActive}
-        setIsActive={setIsActive}
-        onSendMessage={onSendMessage}
-      />
+      {mode === 'text' ? (
+        <>
+          <MessageList messages={messages} />
+          <MessageInput
+            input={input}
+            setInput={setInput}
+            isLoading={isLoading}
+            isActive={isActive}
+            setIsActive={setIsActive}
+            onSendMessage={onSendMessage}
+          />
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <ShineCard>
+            <CircleWaveform />
+          </ShineCard>
+        </div>
+      )}
     </CardContent>
   );
 };
