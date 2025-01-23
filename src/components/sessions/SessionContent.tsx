@@ -3,6 +3,7 @@ import { CardContent } from "@/components/ui/card";
 import { MessageCircle, Mic } from "lucide-react";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import AudioWaveform from "./AudioWaveform";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -44,7 +45,10 @@ const SessionContent = ({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
           <Button
-            onClick={startSession}
+            onClick={() => {
+              setIsActive(false);
+              startSession();
+            }}
             className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
@@ -60,7 +64,10 @@ const SessionContent = ({
           </Button>
 
           <Button
-            onClick={startSession}
+            onClick={() => {
+              setIsActive(true);
+              startSession();
+            }}
             className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
             variant="ghost"
           >
@@ -82,6 +89,7 @@ const SessionContent = ({
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
       <MessageList messages={messages} />
+      {isActive && <AudioWaveform isActive={isActive} />}
       <MessageInput
         input={input}
         setInput={setInput}
