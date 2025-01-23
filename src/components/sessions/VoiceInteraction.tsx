@@ -96,6 +96,7 @@ const VoiceInteraction = () => {
     if (reply) {
       playMessage(reply);
     }
+    setInput(''); // Clear input after sending message
   };
 
   return (
