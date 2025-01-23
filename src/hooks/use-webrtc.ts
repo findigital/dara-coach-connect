@@ -65,12 +65,25 @@ const useWebRTCAudioSession = (voice: string, tools?: Tool[]) => {
   }, []);
 
   const getEphemeralToken = async () => {
-    const { data, error } = await supabase.functions.invoke('get-openai-token', {
-      body: { voice },
-    });
-    
-    if (error) throw error;
-    return data.token;
+    try {
+      const { data, error } = await supabase.functions.invoke('get-openai-token', {
+        body: { voice },
+      });
+      
+      if (error) {
+        console.error('Error getting ephemeral token:', error);
+        throw error;
+      }
+      
+      if (!data?.token) {
+        throw new Error('No token received from the server');
+      }
+      
+      return data.token;
+    } catch (error) {
+      console.error('Failed to get ephemeral token:', error);
+      throw error;
+    }
   };
 
   const setupAudioVisualization = (stream: MediaStream) => {
@@ -170,6 +183,9 @@ const useWebRTCAudioSession = (voice: string, tools?: Tool[]) => {
 
       const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2024-12-17";
+      
+      console.log('Making request to OpenAI with URL:', `${baseUrl}?model=${model}&voice=${voice}`);
+      
       const response = await fetch(`${baseUrl}?model=${model}&voice=${voice}`, {
         method: "POST",
         body: offer.sdp,
@@ -179,16 +195,21 @@ const useWebRTCAudioSession = (voice: string, tools?: Tool[]) => {
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`OpenAI API request failed with status ${response.status}`);
+      }
+
+      const answerSdp = await response.text();
       await pc.setRemoteDescription({
         type: "answer",
-        sdp: await response.text(),
+        sdp: answerSdp,
       });
 
       peerConnectionRef.current = pc;
       setIsSessionActive(true);
       setStatus("Session established successfully!");
     } catch (err) {
-      console.error(err);
+      console.error('Error starting session:', err);
       setStatus(`Error: ${err}`);
       stopSession();
     }
