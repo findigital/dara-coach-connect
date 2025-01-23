@@ -4,7 +4,7 @@ import { Mic, MicOff } from 'lucide-react';
 import useWebRTCAudioSession from '@/hooks/use-webrtc';
 
 const CircleWaveform: React.FC = () => {
-  const { currentVolume, isSessionActive, handleStartStopClick } = useWebRTCAudioSession('alloy');
+  const { currentVolume, isSessionActive, handleStartStopClick, status } = useWebRTCAudioSession('alloy');
   const [bars, setBars] = useState(Array(50).fill(0));
 
   useEffect(() => {
@@ -26,6 +26,11 @@ const CircleWaveform: React.FC = () => {
   return (
     <div className='border text-center justify-items-center p-4 rounded-2xl'>
       <div className="flex items-center justify-center h-full relative" style={{ width: '300px', height: '300px' }}>
+        {status && (
+          <div className="absolute top-2 left-0 right-0 text-sm text-gray-500">
+            {status}
+          </div>
+        )}
         {isSessionActive ? 
           <MicOff
             size={24}
