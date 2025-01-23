@@ -12,12 +12,12 @@ serve(async (req) => {
   }
 
   try {
+    const { voice } = await req.json()
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set')
     }
-
-    const { voice } = await req.json()
 
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
@@ -28,7 +28,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: voice || "alloy",
-        instructions: "You are a helpful AI assistant named Dara, focused on providing coaching and wellness guidance. Be concise, empathetic, and professional in your responses."
+        instructions: "You are Dara, an AI mental health coach. Be empathetic, professional, and focused on the user's wellbeing. Keep responses concise and actionable."
       }),
     });
 
