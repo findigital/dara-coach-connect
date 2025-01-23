@@ -12,6 +12,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -60,6 +61,8 @@ ${chatHistory}`;
         throw new Error('Invalid generation type');
     }
 
+    console.log('Making OpenAI request with prompt:', prompt);
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -67,7 +70,7 @@ ${chatHistory}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
@@ -82,11 +85,13 @@ ${chatHistory}`;
     });
 
     if (!response.ok) {
+      console.error('OpenAI API error:', await response.text());
       throw new Error('Failed to generate insights');
     }
 
     const data = await response.json();
     const generatedContent = data.choices[0].message.content.trim();
+    console.log('Generated content:', generatedContent);
 
     if (type === 'action_items') {
       const actionItems = generatedContent.split('\n')
@@ -102,12 +107,16 @@ ${chatHistory}`;
           completed: false,
         }));
 
+      console.log('Inserting action items:', actionItems);
+      
       const { error: insertError } = await supabase
         .from('action_items')
         .insert(actionItems);
 
       if (insertError) throw insertError;
     } else {
+      console.log('Updating session with content:', generatedContent);
+      
       const { error: updateError } = await supabase
         .from(updateTable)
         .update({ [updateColumn]: generatedContent.replace(/[*_~`]|(\[|\])/g, '') })
@@ -120,7 +129,7 @@ ${chatHistory}`;
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in generate-session-insights:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
