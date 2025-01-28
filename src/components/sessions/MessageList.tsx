@@ -29,14 +29,27 @@ const MessageList = ({ messages }: MessageListProps) => {
               >
                 {message.role === 'assistant' ? (
                   <ReactMarkdown
-                    className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_tr]:border"
+                    className="prose prose-sm max-w-none dark:prose-invert"
                     components={{
                       table: ({ children }) => (
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
+                        <div className="overflow-x-auto border rounded">
+                          <table className="min-w-full divide-y divide-gray-200 border-collapse">
                             {children}
                           </table>
                         </div>
+                      ),
+                      th: ({ children }) => (
+                        <th className="px-3 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          {children}
+                        </th>
+                      ),
+                      td: ({ children }) => (
+                        <td className="px-3 py-2 whitespace-normal text-sm text-gray-500 border-b">
+                          {children}
+                        </td>
+                      ),
+                      tr: ({ children }) => (
+                        <tr className="hover:bg-gray-50">{children}</tr>
                       ),
                     }}
                   >
