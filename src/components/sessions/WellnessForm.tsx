@@ -83,7 +83,7 @@ const WellnessForm = ({ setLocalMessages }: WellnessFormProps) => {
         <AccordionItem value="preferences" className="border-none">
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex items-center justify-between w-full">
-              <span className="text-lg font-semibold">Find Wellness Activities</span>
+              <span className="text-lg font-semibold">My Selections</span>
               {zipCode && <span className="text-sm text-gray-500">ZIP: {zipCode}</span>}
             </div>
           </AccordionTrigger>
