@@ -10,21 +10,23 @@ const Wellness = () => {
       
       <div className="flex-1 lg:ml-64">
         <main className="min-h-screen pt-16 lg:pt-0">
-          {/* Desktop Layout */}
-          <ResizablePanelGroup 
-            direction="horizontal" 
-            className="hidden lg:flex h-[calc(100vh-2rem)]"
-          >
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <WellnessActivities />
-            </ResizablePanel>
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <WellnessNotes />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+          {/* Desktop Layout - Hidden on mobile */}
+          <div className="hidden lg:block h-full">
+            <ResizablePanelGroup 
+              direction="horizontal" 
+              className="h-[calc(100vh-2rem)]"
+            >
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <WellnessActivities />
+              </ResizablePanel>
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <WellnessNotes />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
 
-          {/* Mobile Layout */}
-          <div className="lg:hidden min-h-screen">
+          {/* Mobile Layout - Hidden on desktop */}
+          <div className="lg:hidden">
             <div className="p-4">
               <h1 className="text-2xl font-semibold text-dara-navy">Wellness</h1>
             </div>
