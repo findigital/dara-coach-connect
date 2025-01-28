@@ -20,7 +20,17 @@ serve(async (req) => {
 
     console.log('Fetching wellness recommendations for:', { zipCode, preferences })
 
-    const prompt = `Act as a wellness expert. Find and recommend wellness activities, centers, and programs near zip code ${zipCode}. ${preferences ? `Consider these preferences: ${preferences}` : ''} Focus on providing specific, actionable recommendations with location details when possible. Be concise and practical.`
+    const systemPrompt = `You are a helpful wellness expert assistant. Your responses should be structured and easy to read. When recommending locations:
+    1. Always include the full address
+    2. Mention distance from the provided zip code when possible
+    3. Include any relevant contact information
+    4. Group recommendations by category (e.g., Yoga Studios, Fitness Centers, etc.)
+    5. Provide 2-3 options for each category
+    6. Format the response in a clear, readable way with proper spacing and bullet points`
+
+    const userPrompt = `Find and recommend wellness activities, centers, and programs near zip code ${zipCode}. ${
+      preferences ? `Consider these preferences: ${preferences}. ` : ''
+    }Please provide specific, actionable recommendations with location details.`
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -33,13 +43,15 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful wellness expert. Be precise and concise.'
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: prompt
+            content: userPrompt
           }
-        ]
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
       })
     })
 

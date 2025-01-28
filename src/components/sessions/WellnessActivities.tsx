@@ -1,19 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MapPin, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import MessageList from "./MessageList";
 
-interface WellnessLocation {
-  id: number;
-  name: string;
-  category: string;
-  address: string;
-  distance: string;
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 const WellnessActivities = () => {
@@ -21,8 +17,7 @@ const WellnessActivities = () => {
   const [zipCode, setZipCode] = useState("");
   const [preferences, setPreferences] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [aiResponse, setAiResponse] = useState("");
-  const [locations, setLocations] = useState<WellnessLocation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const handleGetRecommendations = async () => {
     if (!zipCode.trim()) {
@@ -35,6 +30,14 @@ const WellnessActivities = () => {
 
     try {
       setIsLoading(true);
+      
+      // Add user message to the chat
+      const userMessage: Message = {
+        role: 'user',
+        content: `Find wellness activities near ${zipCode}${preferences ? ` with these preferences: ${preferences}` : ''}`
+      };
+      setMessages(prev => [...prev, userMessage]);
+
       const { data, error } = await supabase.functions.invoke('get-wellness-recommendations', {
         body: { zipCode, preferences }
       });
@@ -42,7 +45,12 @@ const WellnessActivities = () => {
       if (error) throw error;
 
       if (data.choices && data.choices[0]?.message?.content) {
-        setAiResponse(data.choices[0].message.content);
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: data.choices[0].message.content
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        
         toast({
           title: "Recommendations found!",
           description: "We've found some wellness activities near you.",
@@ -57,13 +65,6 @@ const WellnessActivities = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSaveLocation = (locationId: number) => {
-    toast({
-      title: "Location saved",
-      description: "The wellness location has been saved to your favorites.",
-    });
   };
 
   return (
@@ -85,9 +86,9 @@ const WellnessActivities = () => {
             </div>
             
             <div>
-              <h3 className="text-sm font-medium mb-2">Add notes about your wellness preferences...</h3>
+              <h3 className="text-sm font-medium mb-2">Wellness Preferences (Optional)</h3>
               <Textarea
-                placeholder="Add notes about your wellness preferences..."
+                placeholder="E.g., 'Looking for yoga studios and meditation centers' or 'Interested in outdoor fitness activities'"
                 value={preferences}
                 onChange={(e) => setPreferences(e.target.value)}
                 className="min-h-[100px] focus-visible:ring-dara-yellow"
@@ -103,50 +104,8 @@ const WellnessActivities = () => {
             </Button>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">AI Wellness Recommendations</h3>
-            <ScrollArea className="h-[calc(100vh-32rem)]">
-              {aiResponse ? (
-                <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap">{aiResponse}</div>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">
-                  Enter your ZIP code and preferences to get personalized wellness recommendations
-                </p>
-              )}
-              
-              <div className="space-y-4 mt-6">
-                {locations.map((location) => (
-                  <Card 
-                    key={location.id} 
-                    className="group hover:-translate-y-1 transition-all duration-200"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg text-dara-navy">{location.category}</h3>
-                          <p className="text-gray-600">{location.name}</p>
-                          <div className="flex items-center gap-1 text-gray-500 mt-1">
-                            <MapPin className="h-4 w-4" />
-                            <span>{location.address}</span>
-                          </div>
-                          <p className="text-dara-navy mt-1">({location.distance})</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="hover:bg-dara-yellow/20"
-                          onClick={() => handleSaveLocation(location.id)}
-                        >
-                          <Save className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
+          <div className="flex-1">
+            <MessageList messages={messages} />
           </div>
         </CardContent>
       </Card>
