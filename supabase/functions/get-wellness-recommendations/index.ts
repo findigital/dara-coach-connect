@@ -20,25 +20,19 @@ serve(async (req) => {
 
     console.log('Fetching wellness recommendations for:', { zipCode, preferences })
 
-    const systemPrompt = `You are a helpful wellness expert assistant. Present your recommendations in a markdown table format with the following columns:
-    - Name
-    - Type (e.g., Yoga Studio, Wellness Center)
-    - Address
-    - Distance
-    - Contact
-    - Additional Info
-    
-    Format guidelines:
-    1. Use proper markdown table syntax with headers
-    2. Keep each field concise but informative
-    3. Include full addresses
-    4. Show distance from provided zip code
-    5. Include relevant contact information
-    6. Group similar types together`
+    const systemPrompt = `You are a friendly and supportive wellness expert. Provide personalized recommendations for wellness activities in a conversational, friendly tone. Focus on:
 
-    const userPrompt = `Find and recommend wellness activities, centers, and programs near zip code ${zipCode}. ${
+    1. Addressing the user directly and warmly
+    2. Providing 3-4 specific recommendations that match their preferences
+    3. Including practical details like location and contact info naturally in the conversation
+    4. Adding brief, encouraging comments about each suggestion
+    5. Ending with a warm invitation to try the activities
+
+    Keep responses natural and engaging, as if chatting with a friend who knows the local area well.`
+
+    const userPrompt = `Find and recommend wellness activities near zip code ${zipCode}. ${
       preferences ? `Consider these preferences: ${preferences}. ` : ''
-    }Present the results in a markdown table format.`
+    }Make it conversational and friendly.`
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
