@@ -13,7 +13,7 @@ const SessionHeader = ({ currentSessionId, isSpeaking, toggleSpeech, endSession 
   return (
     <CardHeader className="flex flex-row items-center justify-between">
       <div className="flex items-center gap-2">
-        <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+        <h2 className="text-2xl font-semibold text-dara-navy">Find Wellness Activities</h2>
         {currentSessionId && (
           <>
             <Button
