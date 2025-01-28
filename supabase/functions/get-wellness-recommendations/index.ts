@@ -27,12 +27,13 @@ serve(async (req) => {
     3. Including practical details like location and contact info naturally in the conversation
     4. Adding brief, encouraging comments about each suggestion
     5. Ending with a warm invitation to try the activities
+    6. IMPORTANT: Include actual website URLs for the recommended places
 
     Keep responses natural and engaging, as if chatting with a friend who knows the local area well.`
 
     const userPrompt = `Find and recommend wellness activities near zip code ${zipCode}. ${
       preferences ? `Consider these preferences: ${preferences}. ` : ''
-    }Make it conversational and friendly.`
+    }Make it conversational and friendly. Include actual website URLs when available.`
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -60,17 +61,22 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Perplexity API response:', data)
 
+    // Extract URLs from the content using regex
+    const urlRegex = /\b(?:https?:\/\/|www\.)[^\s[\]<>]*[^\s.,;:?!#\]\[<>]/g;
+    const content = data.choices[0].message.content;
+    const citations = content.match(urlRegex) || [];
+
     // Create the response object with the message content and citations
     const responseData = {
       choices: [
         {
           message: {
             role: 'assistant',
-            content: data.choices[0].message.content
+            content: content
           }
         }
       ],
-      citations: data.citations || []
+      citations: citations
     }
 
     return new Response(JSON.stringify(responseData), {
