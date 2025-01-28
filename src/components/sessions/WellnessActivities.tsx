@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import MessageList from "./MessageList";
-import { MessageCircle, Mic } from "lucide-react";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,7 +18,6 @@ const WellnessActivities = () => {
   const [preferences, setPreferences] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showInputs, setShowInputs] = useState(false);
 
   const handleGetRecommendations = async () => {
     if (!zipCode.trim()) {
@@ -33,6 +31,7 @@ const WellnessActivities = () => {
     try {
       setIsLoading(true);
       
+      // Add user message to the chat
       const userMessage: Message = {
         role: 'user',
         content: `Find wellness activities near ${zipCode}${preferences ? ` with these preferences: ${preferences}` : ''}`
@@ -68,65 +67,11 @@ const WellnessActivities = () => {
     }
   };
 
-  if (!showInputs) {
-    return (
-      <div className="h-full bg-gray-50 p-6">
-        <Card className="h-full bg-white">
-          <CardHeader>
-            <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
-          </CardHeader>
-          <CardContent className="flex-1 flex items-center justify-center flex-col gap-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-semibold text-dara-navy">Choose Your Conversation Style</h2>
-              <p className="text-gray-600 max-w-md">
-                Select how you'd like to interact with Dara today
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
-              <Button
-                onClick={() => setShowInputs(true)}
-                className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
-                variant="ghost"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <MessageCircle className="w-8 h-8" />
-                  <div className="space-y-2 text-center max-w-[200px]">
-                    <h3 className="font-semibold">Text Chat</h3>
-                    <p className="text-sm text-gray-600 whitespace-normal">
-                      Type your messages and receive written responses from Dara
-                    </p>
-                  </div>
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => setShowInputs(true)}
-                className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
-                variant="ghost"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <Mic className="w-8 h-8" />
-                  <div className="space-y-2 text-center max-w-[200px]">
-                    <h3 className="font-semibold">Voice Chat</h3>
-                    <p className="text-sm text-gray-600 whitespace-normal">
-                      Have a natural voice conversation with Dara in real-time
-                    </p>
-                  </div>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white">
         <CardHeader>
-          <h2 className="text-2xl font-semibold text-dara-navy">Speak with Dara</h2>
+          <h2 className="text-2xl font-semibold text-dara-navy">Wellness Activities</h2>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
