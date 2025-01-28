@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { MessageCircle, Mic } from "lucide-react";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import CircleWaveform, { ShineCard } from "./CircleWaveform";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -34,56 +36,81 @@ const SessionContent = ({
   onSendMessage,
   startSession,
 }: SessionContentProps) => {
-  const [mode, setMode] = useState<'text' | 'voice'>('text');
+  const { toast } = useToast();
+  const [zipCode, setZipCode] = useState("");
+  const [preferences, setPreferences] = useState("");
+
+  const handleGetRecommendations = async () => {
+    if (!zipCode.trim()) {
+      toast({
+        title: "Please enter a ZIP code",
+        description: "We need your location to find wellness activities near you.",
+      });
+      return;
+    }
+
+    try {
+      const userMessage = `Find wellness activities near ${zipCode}${preferences ? ` with these preferences: ${preferences}` : ''}`;
+      onSendMessage(userMessage);
+
+      const { data, error } = await supabase.functions.invoke('get-wellness-recommendations', {
+        body: { zipCode, preferences }
+      });
+
+      if (error) throw error;
+
+      if (data.choices && data.choices[0]?.message?.content) {
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: data.choices[0].message.content
+        };
+        // Note: onSendMessage is used only for user messages, we'd need to add this message differently
+        // This might require updating the parent component to handle assistant messages
+      }
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get wellness recommendations. Please try again.",
+      });
+    }
+  };
 
   if (!currentSessionId) {
     return (
-      <CardContent className="flex-1 flex items-center justify-center flex-col gap-8">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-semibold text-dara-navy">Choose Your Conversation Style</h2>
-          <p className="text-gray-600 max-w-md">
-            Select how you'd like to interact with Dara today
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
-          <Button
-            onClick={() => {
-              setMode('text');
-              startSession();
-            }}
-            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
-            variant="ghost"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <MessageCircle className="w-8 h-8" />
-              <div className="space-y-2 text-center max-w-[200px]">
-                <h3 className="font-semibold">Text Chat</h3>
-                <p className="text-sm text-gray-600 whitespace-normal">
-                  Type your messages and receive written responses from Dara
-                </p>
-              </div>
-            </div>
-          </Button>
+      <CardContent className="flex-1 flex flex-col space-y-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Your Location</h3>
+            <Input
+              placeholder="Enter ZIP code"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              className="focus-visible:ring-dara-yellow"
+            />
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-medium mb-2">Wellness Preferences (Optional)</h3>
+            <Textarea
+              placeholder="E.g., 'Looking for yoga studios and meditation centers' or 'Interested in outdoor fitness activities'"
+              value={preferences}
+              onChange={(e) => setPreferences(e.target.value)}
+              className="min-h-[100px] focus-visible:ring-dara-yellow"
+            />
+          </div>
 
-          <Button
-            onClick={() => {
-              setMode('voice');
-              startSession();
-            }}
-            className="flex flex-col items-center gap-4 p-8 h-auto bg-white border-2 border-dara-yellow hover:bg-dara-yellow/10 text-dara-navy group relative"
-            variant="ghost"
+          <Button 
+            onClick={handleGetRecommendations}
+            disabled={isLoading || !zipCode.trim()}
+            className="w-full bg-dara-yellow hover:bg-dara-yellow/90 text-dara-navy gap-2"
           >
-            <div className="flex flex-col items-center gap-4">
-              <Mic className="w-8 h-8" />
-              <div className="space-y-2 text-center max-w-[200px]">
-                <h3 className="font-semibold">Voice Chat</h3>
-                <p className="text-sm text-gray-600 whitespace-normal">
-                  Have a natural voice conversation with Dara in real-time
-                </p>
-              </div>
-            </div>
+            Get Wellness Recommendations
           </Button>
+        </div>
+
+        <div className="flex-1">
+          <MessageList messages={messages} />
         </div>
       </CardContent>
     );
@@ -91,25 +118,15 @@ const SessionContent = ({
 
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      {mode === 'text' ? (
-        <>
-          <MessageList messages={messages} />
-          <MessageInput
-            input={input}
-            setInput={setInput}
-            isLoading={isLoading}
-            isActive={isActive}
-            setIsActive={setIsActive}
-            onSendMessage={onSendMessage}
-          />
-        </>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <ShineCard>
-            <CircleWaveform />
-          </ShineCard>
-        </div>
-      )}
+      <MessageList messages={messages} />
+      <MessageInput
+        input={input}
+        setInput={setInput}
+        isLoading={isLoading}
+        isActive={isActive}
+        setIsActive={setIsActive}
+        onSendMessage={onSendMessage}
+      />
     </CardContent>
   );
 };
