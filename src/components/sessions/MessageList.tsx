@@ -33,7 +33,7 @@ const MessageList = ({ messages }: MessageListProps) => {
             )}
             <div
               className={cn(
-                "rounded-lg px-4 py-2 max-w-[85%] leading-relaxed",
+                "rounded-lg px-4 py-2 max-w-[85%] leading-relaxed prose prose-sm",
                 message.role === 'user' 
                   ? "bg-dara-yellow text-dara-navy"
                   : "bg-slate-100"

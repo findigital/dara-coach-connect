@@ -102,6 +102,25 @@
   transform-origin: 70% 70%;
 }
 
+/* Add styles for message content */
+.prose p {
+  margin-bottom: 1em;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose a {
+  color: #2563eb;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.prose a:hover {
+  color: #1d4ed8;
+}
+
 @layer utilities {
   .animation-delay-150 {
     animation-delay: 150ms;
