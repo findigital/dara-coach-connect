@@ -12,7 +12,7 @@ interface MessageListProps {
 
 const MessageList = ({ messages }: MessageListProps) => {
   return (
-    <div className="flex-1 h-[calc(100vh-300px)]">
+    <div className="flex-1 h-[calc(100vh-200px)]"> {/* Increased height from -300px to -200px */}
       <ScrollArea className="h-full">
         <div className="space-y-6 pr-4 pb-4">
           {messages.map((message, index) => (
