@@ -1,89 +1,64 @@
-import { useState, useRef } from 'react';
-import { getEphemeralToken } from '@/services/openAiService';
+import { useState, useCallback, useRef } from 'react';
+import { WebRTCConnection } from '@/types/webrtc';
+import { useVolumeMonitor } from './use-volume-monitor';
 
-export const useWebRTCConnection = (voice: string, onMessage: (msg: any) => void) => {
-  const [status, setStatus] = useState("");
+export const useWebRTCConnection = (): WebRTCConnection => {
+  const [status, setStatus] = useState('');
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
+  const { currentVolume, handleVolumeChange } = useVolumeMonitor();
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const startConnection = async () => {
+  const startConnection = useCallback(async () => {
     try {
-      setStatus("Fetching ephemeral token...");
-      const ephemeralToken = await getEphemeralToken(voice);
-
-      setStatus("Establishing connection...");
-      const pc = new RTCPeerConnection();
-      const dataChannel = pc.createDataChannel('response');
-      
-      dataChannel.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-        onMessage(msg);
-      };
-
+      setStatus('Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      pc.addTrack(stream.getTracks()[0]);
+      streamRef.current = stream;
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      const baseUrl = "https://api.openai.com/v1/realtime";
-      const model = "gpt-4o-realtime-preview-2024-12-17";
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
       
-      console.log('Making request to OpenAI with URL:', `${baseUrl}?model=${model}&voice=${voice}`);
-      
-      const response = await fetch(`${baseUrl}?model=${model}&voice=${voice}`, {
-        method: "POST",
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${ephemeralToken}`,
-          "Content-Type": "application/sdp",
-        },
-      });
+      audioContextRef.current = audioContext;
+      sourceNodeRef.current = source;
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API request failed with status ${response.status}`);
-      }
-
-      const answerSdp = await response.text();
-      await pc.setRemoteDescription({
-        type: "answer",
-        sdp: answerSdp,
-      });
-
-      peerConnectionRef.current = pc;
-      dataChannelRef.current = dataChannel;
+      handleVolumeChange(audioContext, source);
       setIsSessionActive(true);
-      setStatus("Session established successfully!");
-      
-      return { pc, dataChannel, stream };
+      setStatus('Connected');
     } catch (error) {
-      console.error('Error establishing connection:', error);
-      throw error;
+      console.error('Error accessing microphone:', error);
+      setStatus('Error accessing microphone');
+      setIsSessionActive(false);
     }
-  };
+  }, [handleVolumeChange]);
 
-  const stopConnection = () => {
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
+  const stopConnection = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
 
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect();
+      sourceNodeRef.current = null;
     }
 
     setIsSessionActive(false);
-    setStatus("");
-  };
+    setStatus('Disconnected');
+  }, []);
 
   return {
     status,
-    setStatus, // Now exposing setStatus
+    setStatus,
     isSessionActive,
     startConnection,
     stopConnection,
-    dataChannel: dataChannelRef.current,
+    currentVolume
   };
 };
