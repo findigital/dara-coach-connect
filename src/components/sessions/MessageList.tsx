@@ -21,21 +21,21 @@ const MessageList = ({ messages }: MessageListProps) => {
           <div
             key={index}
             className={cn(
-              "flex gap-3 text-slate-600",
+              "flex gap-3 text-slate-600 w-full",
               message.role === 'user' && "justify-end"
             )}
           >
             {message.role === 'assistant' && (
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 flex-shrink-0">
                 <div className="bg-dara-yellow rounded-full h-full w-full flex items-center justify-center text-dara-navy font-semibold">
                   D
                 </div>
               </Avatar>
             )}
-            <div className="flex flex-col gap-2 max-w-[85%]">
+            <div className="flex flex-col gap-2 max-w-[80%] min-w-0">
               <div
                 className={cn(
-                  "rounded-lg px-4 py-2 leading-relaxed prose prose-sm",
+                  "rounded-lg px-4 py-2 leading-relaxed prose prose-sm break-words",
                   message.role === 'user' 
                     ? "bg-dara-yellow text-dara-navy"
                     : "bg-slate-100"
@@ -65,7 +65,7 @@ const MessageList = ({ messages }: MessageListProps) => {
               )}
             </div>
             {message.role === 'user' && (
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 flex-shrink-0">
                 <div className="bg-dara-navy rounded-full h-full w-full flex items-center justify-center text-white font-semibold">
                   U
                 </div>
