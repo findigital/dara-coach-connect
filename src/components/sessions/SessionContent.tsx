@@ -39,6 +39,7 @@ const SessionContent = ({
   const { toast } = useToast();
   const [zipCode, setZipCode] = useState("");
   const [preferences, setPreferences] = useState("");
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
   const handleGetRecommendations = async () => {
     if (!zipCode.trim()) {
@@ -50,8 +51,13 @@ const SessionContent = ({
     }
 
     try {
+      // Add user message to the local messages
       const userMessage = `Find wellness activities near ${zipCode}${preferences ? ` with these preferences: ${preferences}` : ''}`;
-      onSendMessage(userMessage);
+      const newUserMessage: Message = {
+        role: 'user',
+        content: userMessage
+      };
+      setLocalMessages(prev => [...prev, newUserMessage]);
 
       const { data, error } = await supabase.functions.invoke('get-wellness-recommendations', {
         body: { zipCode, preferences }
@@ -64,8 +70,7 @@ const SessionContent = ({
           role: 'assistant',
           content: data.choices[0].message.content
         };
-        // Note: onSendMessage is used only for user messages, we'd need to add this message differently
-        // This might require updating the parent component to handle assistant messages
+        setLocalMessages(prev => [...prev, assistantMessage]);
       }
     } catch (error) {
       console.error('Error getting recommendations:', error);
@@ -75,6 +80,8 @@ const SessionContent = ({
       });
     }
   };
+
+  const allMessages = [...messages, ...localMessages];
 
   if (!currentSessionId) {
     return (
@@ -110,7 +117,7 @@ const SessionContent = ({
         </div>
 
         <div className="flex-1">
-          <MessageList messages={messages} />
+          <MessageList messages={allMessages} />
         </div>
       </CardContent>
     );
@@ -118,7 +125,7 @@ const SessionContent = ({
 
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      <MessageList messages={messages} />
+      <MessageList messages={allMessages} />
       <MessageInput
         input={input}
         setInput={setInput}
