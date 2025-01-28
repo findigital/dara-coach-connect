@@ -60,13 +60,20 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Perplexity API response:', data)
 
-    // Extract citations from the response if they exist
-    const citations = data.citations || []
+    // Create the response object with the message content and citations
+    const responseData = {
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: data.choices[0].message.content
+          }
+        }
+      ],
+      citations: data.citations || []
+    }
 
-    return new Response(JSON.stringify({ 
-      ...data,
-      citations 
-    }), {
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
