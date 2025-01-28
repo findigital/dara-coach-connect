@@ -77,22 +77,25 @@ const WellnessActivities = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50 p-6">
+    <div className="h-full bg-gray-50 p-4 lg:p-6">
       <Card className="h-full bg-white">
-        <CardHeader>
-          <h2 className="text-2xl font-semibold text-dara-navy">Wellness Activities</h2>
+        <CardHeader className="space-y-1">
+          <h2 className="text-xl lg:text-2xl font-semibold text-dara-navy">Wellness Activities</h2>
+          <p className="text-sm text-gray-500">Find wellness activities in your area</p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 lg:space-y-6">
           <Accordion 
             type="single" 
             collapsible 
             value={isExpanded}
             onValueChange={setIsExpanded}
           >
-            <AccordionItem value="search-form">
-              <AccordionTrigger>Search for Wellness Activities</AccordionTrigger>
+            <AccordionItem value="search-form" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-2 hover:bg-gray-50 rounded-lg">
+                <span className="text-base font-medium">Search for Wellness Activities</span>
+              </AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-4">
+                <div className="space-y-4 pt-2">
                   <div>
                     <h3 className="text-sm font-medium mb-2">Your Location</h3>
                     <Input
@@ -116,7 +119,7 @@ const WellnessActivities = () => {
                   <Button 
                     onClick={handleGetRecommendations}
                     disabled={isLoading || !zipCode.trim()}
-                    className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-dara-navy gap-2"
+                    className="w-full bg-dara-yellow hover:bg-dara-yellow/90 text-dara-navy gap-2"
                   >
                     {isLoading ? "Finding recommendations..." : "Get Wellness Recommendations"}
                   </Button>
@@ -125,7 +128,7 @@ const WellnessActivities = () => {
             </AccordionItem>
           </Accordion>
 
-          <div className="flex-1">
+          <div className="flex-1 overflow-auto">
             <MessageList messages={messages} />
           </div>
         </CardContent>
