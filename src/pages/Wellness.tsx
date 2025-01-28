@@ -24,17 +24,13 @@ const Wellness = () => {
           </ResizablePanelGroup>
 
           {/* Mobile Layout */}
-          <div className="lg:hidden flex flex-col h-full">
+          <div className="lg:hidden min-h-screen">
             <div className="p-4">
               <h1 className="text-2xl font-semibold text-dara-navy">Wellness</h1>
             </div>
-            <div className="flex-1 p-4 space-y-4">
-              <div className="bg-white rounded-lg shadow-sm">
-                <WellnessActivities />
-              </div>
-              <div className="bg-white rounded-lg shadow-sm">
-                <WellnessNotes />
-              </div>
+            <div className="space-y-4 p-4">
+              <WellnessActivities />
+              <WellnessNotes />
             </div>
           </div>
         </main>
