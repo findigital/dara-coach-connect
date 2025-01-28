@@ -43,6 +43,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          citations: string[] | null
           content: string
           created_at: string | null
           id: string
@@ -50,6 +51,7 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          citations?: string[] | null
           content: string
           created_at?: string | null
           id?: string
@@ -57,6 +59,7 @@ export type Database = {
           session_id: string
         }
         Update: {
+          citations?: string[] | null
           content?: string
           created_at?: string | null
           id?: string

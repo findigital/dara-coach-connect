@@ -14,6 +14,7 @@ import {
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  citations?: string[];
 }
 
 interface WellnessFormProps {
@@ -54,7 +55,8 @@ const WellnessForm = ({ setLocalMessages }: WellnessFormProps) => {
       if (data.choices && data.choices[0]?.message?.content) {
         const assistantMessage: Message = {
           role: 'assistant',
-          content: data.choices[0].message.content
+          content: data.choices[0].message.content,
+          citations: data.citations || []
         };
         setLocalMessages(prev => [...prev, assistantMessage]);
         // Collapse the accordion after successful submission
