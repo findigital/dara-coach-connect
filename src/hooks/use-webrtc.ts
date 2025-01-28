@@ -45,6 +45,7 @@ const useWebRTCAudioSession = (voice: string, tools?: Tool[]) => {
 
   const {
     status,
+    setStatus,
     isSessionActive,
     startConnection,
     stopConnection,

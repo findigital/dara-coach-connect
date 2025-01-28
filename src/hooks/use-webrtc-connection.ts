@@ -80,6 +80,7 @@ export const useWebRTCConnection = (voice: string, onMessage: (msg: any) => void
 
   return {
     status,
+    setStatus, // Now exposing setStatus
     isSessionActive,
     startConnection,
     stopConnection,
