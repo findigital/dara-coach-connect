@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MapPin, Search, Save } from "lucide-react";
+import { MapPin, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WellnessLocation {
   id: number;
@@ -19,48 +20,49 @@ const WellnessActivities = () => {
   const { toast } = useToast();
   const [zipCode, setZipCode] = useState("");
   const [preferences, setPreferences] = useState("");
-  const [locations, setLocations] = useState<WellnessLocation[]>([
-    {
-      id: 1,
-      name: "Peaceful Mind Yoga Studio",
-      category: "Yoga",
-      address: "123 Wellness Ave",
-      distance: "0.5 miles"
-    },
-    {
-      id: 2,
-      name: "Mindful Meditation Center",
-      category: "Meditation",
-      address: "456 Serenity St",
-      distance: "1.2 miles"
-    },
-    {
-      id: 3,
-      name: "Active Life Fitness",
-      category: "Fitness",
-      address: "789 Health Blvd",
-      distance: "1.8 miles"
-    }
-  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState("");
+  const [locations, setLocations] = useState<WellnessLocation[]>([]);
 
-  const handleSearch = () => {
-    toast({
-      title: "Searching wellness facilities",
-      description: `Finding wellness activities near ${zipCode}`,
-    });
+  const handleGetRecommendations = async () => {
+    if (!zipCode.trim()) {
+      toast({
+        title: "Please enter a ZIP code",
+        description: "We need your location to find wellness activities near you.",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('get-wellness-recommendations', {
+        body: { zipCode, preferences }
+      });
+
+      if (error) throw error;
+
+      if (data.choices && data.choices[0]?.message?.content) {
+        setAiResponse(data.choices[0].message.content);
+        toast({
+          title: "Recommendations found!",
+          description: "We've found some wellness activities near you.",
+        });
+      }
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get wellness recommendations. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveLocation = (locationId: number) => {
     toast({
       title: "Location saved",
       description: "The wellness location has been saved to your favorites.",
-    });
-  };
-
-  const handleSavePreferences = () => {
-    toast({
-      title: "Preferences saved",
-      description: "Your wellness preferences have been saved successfully.",
     });
   };
 
@@ -93,18 +95,28 @@ const WellnessActivities = () => {
             </div>
 
             <Button 
-              onClick={handleSavePreferences}
+              onClick={handleGetRecommendations}
+              disabled={isLoading || !zipCode.trim()}
               className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-dara-navy gap-2"
             >
-              <Save className="h-4 w-4" />
-              Save Preferences
+              {isLoading ? "Finding recommendations..." : "Get Wellness Recommendations"}
             </Button>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Recommended Wellness Activities</h3>
+            <h3 className="text-lg font-semibold mb-4">AI Wellness Recommendations</h3>
             <ScrollArea className="h-[calc(100vh-32rem)]">
-              <div className="space-y-4 pr-4">
+              {aiResponse ? (
+                <div className="prose prose-sm max-w-none">
+                  <div className="whitespace-pre-wrap">{aiResponse}</div>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  Enter your ZIP code and preferences to get personalized wellness recommendations
+                </p>
+              )}
+              
+              <div className="space-y-4 mt-6">
                 {locations.map((location) => (
                   <Card 
                     key={location.id} 

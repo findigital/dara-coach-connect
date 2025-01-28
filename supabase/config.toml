@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-session-insights]
 verify_jwt = false
+
+[functions.get-wellness-recommendations]
+verify_jwt = false
