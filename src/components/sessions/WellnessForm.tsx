@@ -4,6 +4,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,6 +25,7 @@ const WellnessForm = ({ setLocalMessages }: WellnessFormProps) => {
   const [zipCode, setZipCode] = useState("");
   const [preferences, setPreferences] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [accordionValue, setAccordionValue] = useState("preferences");
 
   const handleGetRecommendations = async () => {
     if (!zipCode.trim()) {
@@ -50,6 +57,8 @@ const WellnessForm = ({ setLocalMessages }: WellnessFormProps) => {
           content: data.choices[0].message.content
         };
         setLocalMessages(prev => [...prev, assistantMessage]);
+        // Collapse the accordion after successful submission
+        setAccordionValue("");
       }
     } catch (error) {
       console.error('Error getting recommendations:', error);
@@ -64,33 +73,51 @@ const WellnessForm = ({ setLocalMessages }: WellnessFormProps) => {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-sm font-medium mb-2">Your Location</h3>
-        <Input
-          placeholder="Enter ZIP code"
-          value={zipCode}
-          onChange={(e) => setZipCode(e.target.value)}
-          className="focus-visible:ring-dara-yellow"
-        />
-      </div>
-      
-      <div>
-        <h3 className="text-sm font-medium mb-2">Wellness Preferences (Optional)</h3>
-        <Textarea
-          placeholder="E.g., 'Looking for yoga studios and meditation centers' or 'Interested in outdoor fitness activities'"
-          value={preferences}
-          onChange={(e) => setPreferences(e.target.value)}
-          className="min-h-[100px] focus-visible:ring-dara-yellow"
-        />
-      </div>
-
-      <Button 
-        onClick={handleGetRecommendations}
-        disabled={isLoading || !zipCode.trim()}
-        className="w-full bg-dara-yellow hover:bg-dara-yellow/90 text-dara-navy gap-2"
+      <Accordion 
+        type="single" 
+        collapsible 
+        value={accordionValue}
+        onValueChange={setAccordionValue}
+        className="bg-white rounded-lg"
       >
-        {isLoading ? "Finding recommendations..." : "Get Wellness Recommendations"}
-      </Button>
+        <AccordionItem value="preferences" className="border-none">
+          <AccordionTrigger className="px-4 py-2 hover:no-underline">
+            <div className="flex items-center justify-between w-full">
+              <span className="text-lg font-semibold">Find Wellness Activities</span>
+              {zipCode && <span className="text-sm text-gray-500">ZIP: {zipCode}</span>}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Your Location</h3>
+              <Input
+                placeholder="Enter ZIP code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                className="focus-visible:ring-dara-yellow"
+              />
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Wellness Preferences (Optional)</h3>
+              <Textarea
+                placeholder="E.g., 'Looking for yoga studios and meditation centers' or 'Interested in outdoor fitness activities'"
+                value={preferences}
+                onChange={(e) => setPreferences(e.target.value)}
+                className="min-h-[100px] focus-visible:ring-dara-yellow"
+              />
+            </div>
+
+            <Button 
+              onClick={handleGetRecommendations}
+              disabled={isLoading || !zipCode.trim()}
+              className="w-full bg-dara-yellow hover:bg-dara-yellow/90 text-dara-navy gap-2"
+            >
+              {isLoading ? "Finding recommendations..." : "Get Wellness Recommendations"}
+            </Button>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };
