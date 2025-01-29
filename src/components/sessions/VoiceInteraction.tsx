@@ -6,6 +6,8 @@ import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useMessageHandling } from "@/hooks/useMessageHandling";
 import PreSessionView from "./PreSessionView";
 import AudioControls from "./AudioControls";
+import { useRealtimeVoice } from "@/hooks/useRealtimeVoice";
+import { toast } from "sonner";
 
 const VoiceInteraction = () => {
   const [isActive, setIsActive] = useState(false);
@@ -33,25 +35,39 @@ const VoiceInteraction = () => {
     }
   });
 
+  const { startVoiceSession, endVoiceSession } = useRealtimeVoice();
+
   useEffect(() => {
     return () => {
       if (currentSessionId) {
         endSession();
+        endVoiceSession();
       }
     };
   }, [currentSessionId]);
 
   const handleStartSession = async () => {
-    const result = await startSession();
-    if (result) {
-      setNotesContext(result.notesContext);
-      const welcomeMessage = {
-        role: 'assistant' as const,
-        content: result.welcomeMessage
-      };
-      setMessages([welcomeMessage]);
-      playMessage(welcomeMessage.content);
+    try {
+      await startVoiceSession();
+      const result = await startSession();
+      if (result) {
+        setNotesContext(result.notesContext);
+        const welcomeMessage = {
+          role: 'assistant' as const,
+          content: result.welcomeMessage
+        };
+        setMessages([welcomeMessage]);
+        playMessage(welcomeMessage.content);
+      }
+    } catch (error) {
+      console.error('Error starting session:', error);
+      toast.error("Failed to start voice session");
     }
+  };
+
+  const handleEndSession = async () => {
+    endVoiceSession();
+    await endSession();
   };
 
   const handleSendMessage = async (content: string) => {
@@ -69,7 +85,7 @@ const VoiceInteraction = () => {
           currentSessionId={currentSessionId}
           isSpeaking={isSpeaking}
           toggleSpeech={toggleSpeech}
-          endSession={endSession}
+          endSession={handleEndSession}
         />
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           {!currentSessionId ? (
