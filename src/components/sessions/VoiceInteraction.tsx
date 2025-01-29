@@ -29,7 +29,6 @@ const VoiceInteraction = () => {
     sendMessage
   } = useMessageHandling(currentSessionId);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (currentSessionId) {
@@ -112,7 +111,6 @@ const VoiceInteraction = () => {
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           {!currentSessionId ? (
             <div className="flex flex-col items-center gap-8">
-              <h1 className="text-3xl font-bold text-dara-navy">Speak with Dara</h1>
               <CircleWaveform />
             </div>
           ) : (
