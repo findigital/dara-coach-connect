@@ -2,7 +2,7 @@ import { CardContent } from "@/components/ui/card";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { useState } from "react";
-import WellnessForm from "./WellnessForm";
+import CircleWaveform from "./CircleWaveform";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -34,20 +34,14 @@ const SessionContent = ({
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const allMessages = [...messages, ...localMessages];
 
-  if (!currentSessionId) {
-    return (
-      <CardContent className="flex-1 flex flex-col space-y-6">
-        <WellnessForm setLocalMessages={setLocalMessages} />
-        <div className="flex-1">
-          <MessageList messages={allMessages} />
-        </div>
-      </CardContent>
-    );
-  }
-
   return (
     <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      <MessageList messages={allMessages} />
+      <div className="flex-1">
+        <MessageList messages={allMessages} />
+      </div>
+      <div className="flex justify-center mb-4">
+        <CircleWaveform />
+      </div>
       <MessageInput
         input={input}
         setInput={setInput}

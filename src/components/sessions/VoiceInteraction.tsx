@@ -7,6 +7,7 @@ import SessionHeader from "./SessionHeader";
 import SessionContent from "./SessionContent";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useMessageHandling } from "@/hooks/useMessageHandling";
+import CircleWaveform from "./CircleWaveform";
 
 const VoiceInteraction = () => {
   const [isActive, setIsActive] = useState(false);
@@ -96,7 +97,7 @@ const VoiceInteraction = () => {
     if (reply) {
       playMessage(reply);
     }
-    setInput(''); // Clear input after sending message
+    setInput('');
   };
 
   return (
@@ -108,17 +109,26 @@ const VoiceInteraction = () => {
           toggleSpeech={toggleSpeech}
           endSession={endSession}
         />
-        <SessionContent
-          currentSessionId={currentSessionId}
-          messages={messages}
-          input={input}
-          setInput={setInput}
-          isLoading={isLoading}
-          isActive={isActive}
-          setIsActive={setIsActive}
-          onSendMessage={handleSendMessage}
-          startSession={handleStartSession}
-        />
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          {!currentSessionId ? (
+            <div className="flex flex-col items-center gap-8">
+              <h1 className="text-3xl font-bold text-dara-navy">Speak with Dara</h1>
+              <CircleWaveform />
+            </div>
+          ) : (
+            <SessionContent
+              currentSessionId={currentSessionId}
+              messages={messages}
+              input={input}
+              setInput={setInput}
+              isLoading={isLoading}
+              isActive={isActive}
+              setIsActive={setIsActive}
+              onSendMessage={handleSendMessage}
+              startSession={handleStartSession}
+            />
+          )}
+        </div>
       </Card>
     </div>
   );
