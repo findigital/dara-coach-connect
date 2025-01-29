@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import SessionHeader from "./SessionHeader";
 import SessionContent from "./SessionContent";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
@@ -73,7 +74,16 @@ const VoiceInteraction = () => {
         />
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           {!currentSessionId ? (
-            <PreSessionView />
+            <div className="text-center">
+              <PreSessionView />
+              <Button
+                onClick={handleStartSession}
+                className="mt-6 bg-dara-primary hover:bg-dara-primary/90 text-white"
+                size="lg"
+              >
+                Start Session
+              </Button>
+            </div>
           ) : (
             <SessionContent
               currentSessionId={currentSessionId}
