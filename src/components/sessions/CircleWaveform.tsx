@@ -72,7 +72,7 @@ const CircleWaveform: React.FC = () => {
             );
           })}
         </svg>
-        <span className="absolute top-48 w-[calc(100%-70%)] h-[calc(100%-70%)] bg-primary-foreground dark:bg-primary blur-[120px]"></span>
+        {/* Removed the blur span that was causing the white block */}
       </div>
     </div>
   );
