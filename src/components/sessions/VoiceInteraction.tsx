@@ -80,7 +80,7 @@ const VoiceInteraction = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50 p-2 md:p-4 overflow-hidden">
+    <div className="h-full bg-gray-50 p-6">
       <Card className="h-full bg-white flex flex-col overflow-hidden">
         <SessionHeader
           currentSessionId={currentSessionId}
@@ -94,19 +94,17 @@ const VoiceInteraction = () => {
               <PreSessionView onStartSession={handleStartSession} />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <SessionContent
-                currentSessionId={currentSessionId}
-                messages={messages}
-                input={input}
-                setInput={setInput}
-                isLoading={isLoading}
-                isActive={isActive}
-                setIsActive={setIsActive}
-                onSendMessage={handleSendMessage}
-                startSession={handleStartSession}
-              />
-            </div>
+            <SessionContent
+              currentSessionId={currentSessionId}
+              messages={messages}
+              input={input}
+              setInput={setInput}
+              isLoading={isLoading}
+              isActive={isActive}
+              setIsActive={setIsActive}
+              onSendMessage={handleSendMessage}
+              startSession={handleStartSession}
+            />
           )}
         </div>
       </Card>
