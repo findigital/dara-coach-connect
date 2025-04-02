@@ -1,3 +1,4 @@
+
 import { Mic, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +70,7 @@ const MessageInput = ({
   };
 
   return (
-    <div className="flex items-center gap-2 pt-4">
+    <div className="flex items-center gap-2 pt-2 pb-4 px-4">
       <Button
         variant="outline"
         size="icon"
@@ -82,9 +83,9 @@ const MessageInput = ({
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Type your message..."
-        className="flex-1 h-16 py-2"
+        className="flex-1 h-12"
         onKeyPress={(e) => {
-          if (e.key === 'Enter' && !isLoading) {
+          if (e.key === 'Enter' && !isLoading && input.trim()) {
             onSendMessage(input);
           }
         }}

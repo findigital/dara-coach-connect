@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, MicOff } from 'lucide-react';
@@ -24,8 +25,8 @@ const CircleWaveform: React.FC = () => {
   };
 
   return (
-    <div className='border text-center justify-items-center p-4 rounded-2xl'>
-      <div className="flex items-center justify-center h-full relative" style={{ width: '300px', height: '300px' }}>
+    <div className='border text-center justify-items-center p-4 rounded-2xl max-w-full'>
+      <div className="flex items-center justify-center h-full relative" style={{ width: '250px', height: '250px' }}>
         {status && (
           <div className="absolute top-2 left-0 right-0 text-sm text-gray-500">
             {status}

@@ -1,3 +1,4 @@
+
 import { CardContent } from "@/components/ui/card";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
@@ -35,21 +36,23 @@ const SessionContent = ({
   const allMessages = [...messages, ...localMessages];
 
   return (
-    <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-      <div className="flex-1">
+    <CardContent className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto mb-4">
         <MessageList messages={allMessages} />
       </div>
       <div className="flex justify-center mb-4">
         <CircleWaveform />
       </div>
-      <MessageInput
-        input={input}
-        setInput={setInput}
-        isLoading={isLoading}
-        isActive={isActive}
-        setIsActive={setIsActive}
-        onSendMessage={onSendMessage}
-      />
+      <div className="mt-auto">
+        <MessageInput
+          input={input}
+          setInput={setInput}
+          isLoading={isLoading}
+          isActive={isActive}
+          setIsActive={setIsActive}
+          onSendMessage={onSendMessage}
+        />
+      </div>
     </CardContent>
   );
 };

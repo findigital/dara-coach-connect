@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import SessionHeader from "./SessionHeader";
@@ -80,16 +81,18 @@ const VoiceInteraction = () => {
 
   return (
     <div className="h-full bg-gray-50 p-6">
-      <Card className="h-full bg-white flex flex-col">
+      <Card className="h-full bg-white flex flex-col overflow-hidden">
         <SessionHeader
           currentSessionId={currentSessionId}
           isSpeaking={isSpeaking}
           toggleSpeech={toggleSpeech}
           endSession={handleEndSession}
         />
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {!currentSessionId ? (
-            <PreSessionView onStartSession={handleStartSession} />
+            <div className="flex-1 flex items-center justify-center p-6">
+              <PreSessionView onStartSession={handleStartSession} />
+            </div>
           ) : (
             <SessionContent
               currentSessionId={currentSessionId}

@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,8 +16,8 @@ interface MessageListProps {
 
 const MessageList = ({ messages }: MessageListProps) => {
   return (
-    <ScrollArea className="flex-1 pr-4">
-      <div className="space-y-4 mb-4">
+    <ScrollArea className="flex-1 pr-4 h-full">
+      <div className="space-y-4 mb-4 p-2">
         {messages.map((message, index) => (
           <div
             key={index}
