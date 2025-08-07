@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import MessageList from "./MessageList";
+import { Loader2 } from "lucide-react";
 import { 
   Accordion, 
   AccordionContent, 
@@ -121,6 +122,7 @@ const WellnessActivities = () => {
                     disabled={isLoading || !zipCode.trim()}
                     className="w-full bg-dara-yellow hover:bg-dara-yellow/90 text-dara-navy gap-2"
                   >
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isLoading ? "Finding recommendations..." : "Get Wellness Recommendations"}
                   </Button>
                 </div>
