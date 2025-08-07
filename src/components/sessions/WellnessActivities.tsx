@@ -131,7 +131,13 @@ const WellnessActivities = () => {
           </Accordion>
 
           <div className="flex-1 overflow-auto">
-            <MessageList messages={messages} />
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                <Loader2 className="h-8 w-8 animate-spin text-dara-yellow" />
+                <p className="text-sm text-gray-600">Searching for wellness activities...</p>
+              </div>
+            )}
+            {!isLoading && <MessageList messages={messages} />}
           </div>
         </CardContent>
       </Card>
