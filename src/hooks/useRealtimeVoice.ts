@@ -15,9 +15,9 @@ export const useRealtimeVoice = (sessionId: string | null = null) => {
     }
   }, []);
 
-  const startVoiceSession = async () => {
+  const startVoiceSession = async (overrideSessionId?: string | null) => {
     try {
-      chatRef.current = new RealtimeChat(handleMessage, sessionId);
+      chatRef.current = new RealtimeChat(handleMessage, overrideSessionId ?? sessionId);
       await chatRef.current.init();
       setIsConnected(true);
       toast.success("Voice connection established");

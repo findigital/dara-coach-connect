@@ -49,7 +49,6 @@ const VoiceInteraction = () => {
 
   const handleStartSession = async () => {
     try {
-      await startVoiceSession();
       const result = await startSession();
       if (result) {
         setNotesContext(result.notesContext);
@@ -59,6 +58,7 @@ const VoiceInteraction = () => {
         };
         setMessages([welcomeMessage]);
         playMessage(welcomeMessage.content);
+        await startVoiceSession(result.sessionId);
       }
     } catch (error) {
       console.error('Error starting session:', error);

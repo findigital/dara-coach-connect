@@ -108,22 +108,52 @@ export const useSessionManagement = () => {
 
       if (error) throw error;
 
-      // Add delay to ensure all messages are persisted before generating insights
+      // Poll for chat messages to ensure at least one message exists before generating insights
       console.log("⏳ Waiting for messages to be persisted...");
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      const maxWaitMs = 20000; // 20s timeout
+      const intervalMs = 1000;
+      let waited = 0;
+      let hasMessages = false;
 
-      // Generate session insights
-      await Promise.all([
-        supabase.functions.invoke('generate-session-insights', {
-          body: { sessionId: currentSessionId, type: 'title' },
-        }),
-        supabase.functions.invoke('generate-session-insights', {
-          body: { sessionId: currentSessionId, type: 'summary' },
-        }),
-        supabase.functions.invoke('generate-session-insights', {
-          body: { sessionId: currentSessionId, type: 'action_items' },
-        }),
-      ]);
+      while (waited < maxWaitMs) {
+        const { count, error: countError } = await supabase
+          .from('chat_messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('session_id', currentSessionId);
+
+        if (countError) {
+          console.error('Error counting chat messages:', countError);
+          break;
+        }
+
+        if ((count ?? 0) > 0) {
+          hasMessages = true;
+          break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+        waited += intervalMs;
+      }
+
+      if (!hasMessages) {
+        console.warn('No chat messages found for session; skipping insight generation to avoid empty/incorrect data.');
+        setCurrentSessionId(null);
+        toast.success("Coaching session ended");
+        return;
+      }
+
+      // Generate session insights sequentially to avoid races
+      await supabase.functions.invoke('generate-session-insights', {
+        body: { sessionId: currentSessionId, type: 'title' },
+      });
+
+      await supabase.functions.invoke('generate-session-insights', {
+        body: { sessionId: currentSessionId, type: 'summary' },
+      });
+
+      await supabase.functions.invoke('generate-session-insights', {
+        body: { sessionId: currentSessionId, type: 'action_items' },
+      });
 
       setCurrentSessionId(null);
       toast.success("Coaching session ended");

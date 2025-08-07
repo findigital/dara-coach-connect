@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { SessionList } from "./SessionList";
 import { SessionDetails } from "./SessionDetails";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import type { Session, ActionItem } from "@/types/session";
 
 const PastSessions = () => {
@@ -34,6 +35,49 @@ const PastSessions = () => {
       handleSessionSelect(sessions[0]);
     }
   }, [sessions]);
+
+  // Realtime subscriptions for sessions and action items
+  useEffect(() => {
+    if (!authSession?.user?.id) return;
+
+    const sessionsChannel = supabase
+      .channel('coaching_sessions_updates')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'coaching_sessions', filter: `user_id=eq.${authSession.user.id}` },
+        (payload) => {
+          refetch();
+          if (selectedSession && (payload as any).new?.id === selectedSession.id) {
+            setSelectedSession(prev => prev ? { ...prev, ...(payload as any).new } as Session : prev);
+            if (!selectedSession.summary && (payload as any).new?.summary) {
+              toast.success('Session summary updated');
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    let itemsChannel: any = null;
+
+    if (selectedSession?.id) {
+      itemsChannel = supabase
+        .channel(`action_items_${selectedSession.id}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'action_items', filter: `session_id=eq.${selectedSession.id}` },
+          () => {
+            fetchSessionDetails(selectedSession.id);
+            toast.success('New action items added');
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      supabase.removeChannel(sessionsChannel);
+      if (itemsChannel) supabase.removeChannel(itemsChannel);
+    };
+  }, [authSession?.user?.id, selectedSession?.id]);
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
@@ -122,6 +166,14 @@ const PastSessions = () => {
     fetchSessionDetails(session.id);
   };
 
+  const handleRefresh = async () => {
+    await refetch();
+    if (selectedSession) {
+      await fetchSessionDetails(selectedSession.id);
+    }
+    toast.success('Refreshed');
+  };
+
   if (isLoading) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center">
@@ -133,6 +185,9 @@ const PastSessions = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-4 space-y-4">
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={handleRefresh}>Refresh</Button>
+        </div>
         <div className="grid lg:grid-cols-2 gap-6">
           <SessionList
             sessions={sessions || []}

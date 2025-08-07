@@ -50,6 +50,15 @@ serve(async (req) => {
       throw messagesError;
     }
 
+    // If there's no chat history yet, return 202 to indicate generation should be retried later
+    if (!messages || messages.length === 0) {
+      console.log('No chat messages found for session; returning 202 (pending)');
+      return new Response(JSON.stringify({ status: 'pending', reason: 'no chat history yet' }), {
+        status: 202,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const chatHistory = messages?.map(msg => `${msg.role}: ${msg.content}`).join('\n') || '';
     let prompt = '';
     let updateTable = 'coaching_sessions';
