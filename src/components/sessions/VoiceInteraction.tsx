@@ -36,7 +36,7 @@ const VoiceInteraction = () => {
     }
   });
 
-  const { startVoiceSession, endVoiceSession } = useRealtimeVoice();
+  const { startVoiceSession, endVoiceSession } = useRealtimeVoice(currentSessionId);
 
   useEffect(() => {
     return () => {

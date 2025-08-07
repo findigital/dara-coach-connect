@@ -108,6 +108,9 @@ export const useSessionManagement = () => {
 
       if (error) throw error;
 
+      // Add a small delay to ensure all messages are persisted before generating insights
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Generate session insights
       await Promise.all([
         supabase.functions.invoke('generate-session-insights', {

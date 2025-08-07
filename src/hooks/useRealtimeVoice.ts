@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
-export const useRealtimeVoice = () => {
+export const useRealtimeVoice = (sessionId: string | null = null) => {
   const [isConnected, setIsConnected] = useState(false);
   const chatRef = useRef<RealtimeChat | null>(null);
 
@@ -17,7 +17,7 @@ export const useRealtimeVoice = () => {
 
   const startVoiceSession = async () => {
     try {
-      chatRef.current = new RealtimeChat(handleMessage);
+      chatRef.current = new RealtimeChat(handleMessage, sessionId);
       await chatRef.current.init();
       setIsConnected(true);
       toast.success("Voice connection established");

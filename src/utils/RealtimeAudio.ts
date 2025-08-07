@@ -62,10 +62,14 @@ export class RealtimeChat {
   private dc: RTCDataChannel | null = null;
   private audioEl: HTMLAudioElement;
   private recorder: AudioRecorder | null = null;
+  private sessionId: string | null = null;
+  private currentUserTranscript = '';
+  private currentAssistantTranscript = '';
 
-  constructor(private onMessage: (message: any) => void) {
+  constructor(private onMessage: (message: any) => void, sessionId: string | null = null) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
+    this.sessionId = sessionId;
   }
 
   async init() {
@@ -93,6 +97,7 @@ export class RealtimeChat {
       this.dc.addEventListener("message", (e) => {
         const event = JSON.parse(e.data);
         console.log("Received event:", event);
+        this.handleRealtimeEvent(event);
         this.onMessage(event);
       });
 
@@ -174,6 +179,70 @@ export class RealtimeChat {
 
     this.dc.send(JSON.stringify(event));
     this.dc.send(JSON.stringify({type: 'response.create'}));
+  }
+
+  private async handleRealtimeEvent(event: any) {
+    try {
+      if (!this.sessionId) return;
+
+      // Handle user speech transcription
+      if (event.type === 'conversation.item.input_audio_transcription.completed') {
+        const transcript = event.transcript?.trim();
+        if (transcript) {
+          await this.saveMessage('user', transcript);
+        }
+      }
+      
+      // Handle assistant response transcription - collect deltas
+      if (event.type === 'response.audio_transcript.delta') {
+        this.currentAssistantTranscript += event.delta || '';
+      }
+      
+      // Save complete assistant response when done
+      if (event.type === 'response.audio_transcript.done') {
+        const transcript = this.currentAssistantTranscript.trim();
+        if (transcript) {
+          await this.saveMessage('assistant', transcript);
+        }
+        this.currentAssistantTranscript = '';
+      }
+
+      // Handle conversation items (for text messages)
+      if (event.type === 'conversation.item.created' && event.item) {
+        const item = event.item;
+        if (item.type === 'message' && item.content) {
+          for (const content of item.content) {
+            if (content.type === 'text' && content.text) {
+              await this.saveMessage(item.role, content.text);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling realtime event:', error);
+    }
+  }
+
+  private async saveMessage(role: 'user' | 'assistant', content: string) {
+    if (!this.sessionId || !content.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: this.sessionId,
+          role,
+          content: content.trim()
+        });
+
+      if (error) {
+        console.error('Error saving message to database:', error);
+      } else {
+        console.log(`Saved ${role} message:`, content.trim());
+      }
+    } catch (error) {
+      console.error('Error in saveMessage:', error);
+    }
   }
 
   disconnect() {
