@@ -67,9 +67,11 @@ export class RealtimeChat {
   private currentAssistantTranscript = '';
 
   constructor(private onMessage: (message: any) => void, sessionId: string | null = null) {
+    console.log("🎯 RealtimeChat constructor - sessionId received:", sessionId);
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
     this.sessionId = sessionId;
+    console.log("🎯 RealtimeChat constructor - sessionId set to:", this.sessionId);
   }
 
   async init() {
@@ -212,10 +214,16 @@ export class RealtimeChat {
     try {
       // Log ALL events for debugging
       console.log("🔍 ALL EVENT TYPES:", event.type, event);
+      console.log("🔍 Current sessionId in handleRealtimeEvent:", this.sessionId);
       
       if (!this.sessionId) {
-        console.log("⚠️ No sessionId available, skipping message save");
-        return;
+        console.log("⚠️ No sessionId available, skipping message save. Available sessionId:", this.sessionId);
+        // Try to get the most recent active session as fallback
+        await this.tryGetActiveSession();
+        if (!this.sessionId) {
+          console.log("⚠️ Still no sessionId after fallback attempt");
+          return;
+        }
       }
 
       // Handle session events
@@ -348,6 +356,32 @@ export class RealtimeChat {
       }
     } catch (error) {
       console.error('❌ Error in saveMessage:', error);
+    }
+  }
+
+  private async tryGetActiveSession() {
+    try {
+      console.log("🔄 Attempting to get active session as fallback");
+      const { data: sessions, error } = await supabase
+        .from('coaching_sessions')
+        .select('id')
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("❌ Error fetching active session:", error);
+        return;
+      }
+
+      if (sessions && sessions.length > 0) {
+        this.sessionId = sessions[0].id;
+        console.log("✅ Found active session as fallback:", this.sessionId);
+      } else {
+        console.log("⚠️ No active sessions found");
+      }
+    } catch (error) {
+      console.error("❌ Error in tryGetActiveSession:", error);
     }
   }
 
