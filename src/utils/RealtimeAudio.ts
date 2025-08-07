@@ -132,7 +132,7 @@ export class RealtimeChat {
           type: "session.update",
           session: {
             modalities: ["text", "audio"],
-            instructions: "You are Dara, a supportive AI coach. Have natural conversations and provide guidance.",
+            instructions: "You are Dara, an empathetic, professional AI mental health coach. Default to English. Do not switch languages automatically. If the user speaks in another language, reply in English acknowledging it and ask, 'Would you like me to switch to <language>?'. Only switch after explicit confirmation, and switch back to English upon request. Keep responses concise and actionable.",
             voice: "alloy",
             input_audio_format: "pcm16",
             output_audio_format: "pcm16",
