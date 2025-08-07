@@ -108,8 +108,9 @@ export const useSessionManagement = () => {
 
       if (error) throw error;
 
-      // Add a small delay to ensure all messages are persisted before generating insights
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Add delay to ensure all messages are persisted before generating insights
+      console.log("⏳ Waiting for messages to be persisted...");
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Generate session insights
       await Promise.all([

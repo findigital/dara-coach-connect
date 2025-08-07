@@ -96,7 +96,7 @@ export class RealtimeChat {
       this.dc = this.pc.createDataChannel("oai-events");
       this.dc.addEventListener("message", (e) => {
         const event = JSON.parse(e.data);
-        console.log("Received event:", event);
+        console.log("🎤 Received WebRTC event:", event.type, event);
         this.handleRealtimeEvent(event);
         this.onMessage(event);
       });
@@ -122,6 +122,33 @@ export class RealtimeChat {
       
       await this.pc.setRemoteDescription(answer);
       console.log("WebRTC connection established");
+
+      // Send session configuration to enable input audio transcription
+      this.dc.addEventListener("open", () => {
+        console.log("🔗 Data channel opened, configuring session...");
+        const sessionConfig = {
+          type: "session.update",
+          session: {
+            modalities: ["text", "audio"],
+            instructions: "You are Dara, a supportive AI coach. Have natural conversations and provide guidance.",
+            voice: "alloy",
+            input_audio_format: "pcm16",
+            output_audio_format: "pcm16",
+            input_audio_transcription: {
+              model: "whisper-1"
+            },
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 1000
+            },
+            temperature: 0.8
+          }
+        };
+        this.dc?.send(JSON.stringify(sessionConfig));
+        console.log("📝 Sent session configuration:", sessionConfig);
+      });
 
       this.recorder = new AudioRecorder((audioData) => {
         if (this.dc?.readyState === 'open') {
@@ -183,33 +210,58 @@ export class RealtimeChat {
 
   private async handleRealtimeEvent(event: any) {
     try {
-      if (!this.sessionId) return;
+      if (!this.sessionId) {
+        console.log("⚠️ No sessionId available, skipping message save");
+        return;
+      }
 
-      // Handle user speech transcription
+      console.log("🔍 Processing event type:", event.type);
+
+      // Handle user speech transcription (when user speaks)
       if (event.type === 'conversation.item.input_audio_transcription.completed') {
         const transcript = event.transcript?.trim();
+        console.log("👤 User transcript completed:", transcript);
         if (transcript) {
           await this.saveMessage('user', transcript);
         }
+      }
+
+      // Handle user input audio transcription deltas
+      if (event.type === 'conversation.item.input_audio_transcription.delta') {
+        this.currentUserTranscript += event.delta || '';
+        console.log("👤 User transcript delta:", event.delta);
+      }
+
+      // Save user transcript when done
+      if (event.type === 'conversation.item.input_audio_transcription.done') {
+        const transcript = this.currentUserTranscript.trim();
+        console.log("👤 User transcript done:", transcript);
+        if (transcript) {
+          await this.saveMessage('user', transcript);
+        }
+        this.currentUserTranscript = '';
       }
       
       // Handle assistant response transcription - collect deltas
       if (event.type === 'response.audio_transcript.delta') {
         this.currentAssistantTranscript += event.delta || '';
+        console.log("🤖 Assistant transcript delta:", event.delta);
       }
       
       // Save complete assistant response when done
       if (event.type === 'response.audio_transcript.done') {
         const transcript = this.currentAssistantTranscript.trim();
+        console.log("🤖 Assistant transcript done:", transcript);
         if (transcript) {
           await this.saveMessage('assistant', transcript);
         }
         this.currentAssistantTranscript = '';
       }
 
-      // Handle conversation items (for text messages)
+      // Handle conversation items (alternative path for text messages)
       if (event.type === 'conversation.item.created' && event.item) {
         const item = event.item;
+        console.log("💬 Conversation item created:", item);
         if (item.type === 'message' && item.content) {
           for (const content of item.content) {
             if (content.type === 'text' && content.text) {
@@ -218,15 +270,29 @@ export class RealtimeChat {
           }
         }
       }
+
+      // Handle input audio buffer speech started/stopped
+      if (event.type === 'input_audio_buffer.speech_started') {
+        console.log("🎤 User started speaking");
+      }
+      
+      if (event.type === 'input_audio_buffer.speech_stopped') {
+        console.log("🔇 User stopped speaking");
+      }
+
     } catch (error) {
-      console.error('Error handling realtime event:', error);
+      console.error('❌ Error handling realtime event:', error);
     }
   }
 
   private async saveMessage(role: 'user' | 'assistant', content: string) {
-    if (!this.sessionId || !content.trim()) return;
+    if (!this.sessionId || !content.trim()) {
+      console.log(`⚠️ Skipping save - sessionId: ${this.sessionId}, content: "${content}"`);
+      return;
+    }
 
     try {
+      console.log(`💾 Saving ${role} message to DB:`, content.trim());
       const { error } = await supabase
         .from('chat_messages')
         .insert({
@@ -236,12 +302,12 @@ export class RealtimeChat {
         });
 
       if (error) {
-        console.error('Error saving message to database:', error);
+        console.error('❌ Error saving message to database:', error);
       } else {
-        console.log(`Saved ${role} message:`, content.trim());
+        console.log(`✅ Successfully saved ${role} message:`, content.trim());
       }
     } catch (error) {
-      console.error('Error in saveMessage:', error);
+      console.error('❌ Error in saveMessage:', error);
     }
   }
 
