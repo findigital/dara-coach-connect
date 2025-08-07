@@ -26,7 +26,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-realtime-preview-2024-12-17",
+        model: "gpt-4o-realtime-preview-2025-06-03",
         voice: voice || "alloy",
         instructions: "You are Dara, an AI mental health coach. Be empathetic, professional, and focused on the user's wellbeing. Keep responses concise and actionable."
       }),
