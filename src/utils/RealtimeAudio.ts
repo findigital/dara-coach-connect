@@ -210,32 +210,47 @@ export class RealtimeChat {
 
   private async handleRealtimeEvent(event: any) {
     try {
+      // Log ALL events for debugging
+      console.log("🔍 ALL EVENT TYPES:", event.type, event);
+      
       if (!this.sessionId) {
         console.log("⚠️ No sessionId available, skipping message save");
         return;
       }
 
-      console.log("🔍 Processing event type:", event.type);
+      // Handle session events
+      if (event.type === 'session.created') {
+        console.log("🎯 Session created successfully");
+      }
 
-      // Handle user speech transcription (when user speaks)
+      if (event.type === 'session.updated') {
+        console.log("🎯 Session updated successfully");
+      }
+
+      // Handle user speech transcription completion - this is the key event we need
       if (event.type === 'conversation.item.input_audio_transcription.completed') {
         const transcript = event.transcript?.trim();
-        console.log("👤 User transcript completed:", transcript);
+        console.log("👤 User transcript completed:", transcript, "Full event:", event);
         if (transcript) {
           await this.saveMessage('user', transcript);
         }
       }
 
-      // Handle user input audio transcription deltas
-      if (event.type === 'conversation.item.input_audio_transcription.delta') {
-        this.currentUserTranscript += event.delta || '';
-        console.log("👤 User transcript delta:", event.delta);
+      // Handle user speech transcription failure
+      if (event.type === 'conversation.item.input_audio_transcription.failed') {
+        console.error("❌ User transcript failed:", event);
       }
 
-      // Save user transcript when done
+      // Handle user input audio transcription deltas (building up the transcript)
+      if (event.type === 'conversation.item.input_audio_transcription.delta') {
+        this.currentUserTranscript += event.delta || '';
+        console.log("👤 User transcript delta:", event.delta, "Current:", this.currentUserTranscript);
+      }
+
+      // Save user transcript when transcription is done
       if (event.type === 'conversation.item.input_audio_transcription.done') {
         const transcript = this.currentUserTranscript.trim();
-        console.log("👤 User transcript done:", transcript);
+        console.log("👤 User transcript done:", transcript, "Full event:", event);
         if (transcript) {
           await this.saveMessage('user', transcript);
         }
@@ -245,20 +260,20 @@ export class RealtimeChat {
       // Handle assistant response transcription - collect deltas
       if (event.type === 'response.audio_transcript.delta') {
         this.currentAssistantTranscript += event.delta || '';
-        console.log("🤖 Assistant transcript delta:", event.delta);
+        console.log("🤖 Assistant transcript delta:", event.delta, "Current:", this.currentAssistantTranscript);
       }
       
       // Save complete assistant response when done
       if (event.type === 'response.audio_transcript.done') {
         const transcript = this.currentAssistantTranscript.trim();
-        console.log("🤖 Assistant transcript done:", transcript);
+        console.log("🤖 Assistant transcript done:", transcript, "Full event:", event);
         if (transcript) {
           await this.saveMessage('assistant', transcript);
         }
         this.currentAssistantTranscript = '';
       }
 
-      // Handle conversation items (alternative path for text messages)
+      // Handle conversation items (alternative path for messages)
       if (event.type === 'conversation.item.created' && event.item) {
         const item = event.item;
         console.log("💬 Conversation item created:", item);
@@ -266,18 +281,43 @@ export class RealtimeChat {
           for (const content of item.content) {
             if (content.type === 'text' && content.text) {
               await this.saveMessage(item.role, content.text);
+            } else if (content.type === 'input_audio' || content.type === 'audio') {
+              console.log("🎵 Audio content detected in conversation item");
             }
           }
         }
       }
 
-      // Handle input audio buffer speech started/stopped
+      // Handle response events
+      if (event.type === 'response.created') {
+        console.log("🎯 Response created");
+      }
+
+      if (event.type === 'response.done') {
+        console.log("🎯 Response completed");
+      }
+
+      // Handle input audio buffer events
       if (event.type === 'input_audio_buffer.speech_started') {
         console.log("🎤 User started speaking");
       }
       
       if (event.type === 'input_audio_buffer.speech_stopped') {
         console.log("🔇 User stopped speaking");
+      }
+
+      if (event.type === 'input_audio_buffer.committed') {
+        console.log("📝 Audio buffer committed");
+      }
+
+      // Handle turn detection events
+      if (event.type === 'conversation.item.truncated') {
+        console.log("✂️ Conversation item truncated");
+      }
+
+      // Handle errors
+      if (event.type === 'error') {
+        console.error("❌ OpenAI Realtime API Error:", event);
       }
 
     } catch (error) {
