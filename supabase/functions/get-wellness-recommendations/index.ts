@@ -53,8 +53,14 @@ serve(async (req) => {
             content: userPrompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1000
+        temperature: 0.5,
+        max_tokens: 1800,
+        top_p: 0.9,
+        reasoning_effort: 'medium',
+        search_mode: 'web',
+        web_search_options: {
+          search_context_size: 'high'
+        }
       })
     })
 
